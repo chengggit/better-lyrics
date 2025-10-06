@@ -17,33 +17,45 @@ import * as RequestSniffing from "./requestSniffer";
 import * as Storage from "../../core/storage"
 import {AppState} from "../../index";
 import {PlayerDetails} from "../../index";
+import {SegmentMap} from "./requestSniffer";
+import {
+  CubeyLyricSourceResult,
+  LyricSourceResult,
+  ProviderParameters,
+  YTLyricSourceResult
+} from "./providers";
 
 /** Current version of the lyrics cache format */
 const LYRIC_CACHE_VERSION = "1.2.0";
 
-/**
- * Core lyrics functionality for the BetterLyrics extension.
- * Handles lyrics fetching, caching, processing, and DOM injection.
- *
- * @namespace Lyrics
- */
+type LyricSourceResultWithMeta = LyricSourceResult & {
+  song: string,
+  artist: string,
+  album: string,
+  duration: number,
+  videoId: string
+}
+
+type LyricSourceResultWithMetaAndVersion = LyricSourceResultWithMeta & {
+  version: string,
+}
 
 /**
  * Main function to create and inject lyrics for the current song.
  * Handles caching, API requests, and fallback mechanisms.
  *
- * @param {PlayerDetails} detail - Song and player details
- * @param signal {AbortSignal}
+ * @param detail - Song and player details
+ * @param signal
    */
 export async function createLyrics(detail: PlayerDetails, signal: AbortSignal): Promise<void> {
   let song = detail.song;
   let artist = detail.artist;
   let videoId = detail.videoId;
-  let duration = detail.duration;
+  let duration = Number(detail.duration);
   const audioTrackData = detail.audioTrackData;
   const isMusicVideo = detail.contentRect.width !== 0 && detail.contentRect.height !== 0;
 
-  if (!videoId || typeof videoId !== "string") {
+  if (!videoId) {
     Utils.log(Constants.SERVER_ERROR_LOG, "Invalid video id");
     return;
   }
@@ -74,10 +86,8 @@ export async function createLyrics(detail: PlayerDetails, signal: AbortSignal): 
 
   // We should get recalled if we were executed without a valid song/artist and aren't able to get lyrics
 
-  /**
-   * @type {SegmentMap | null}
-   */
-  let segmentMap = null;
+
+  let segmentMap: SegmentMap | null = null;
   let matchingSong = await RequestSniffer.getMatchingSong(videoId, 1);
   let swappedVideoId = false;
   if (
@@ -106,12 +116,6 @@ export async function createLyrics(detail: PlayerDetails, signal: AbortSignal): 
     return;
   }
 
-  // Input validation
-  if (typeof song !== "string" || typeof artist !== "string") {
-    Utils.log(Constants.SERVER_ERROR_LOG, "Invalid song or artist data");
-    return;
-  }
-
   song = song.trim();
   artist = artist.trim();
   artist = artist.replace(", & ", ", ");
@@ -128,13 +132,10 @@ export async function createLyrics(detail: PlayerDetails, signal: AbortSignal): 
 
   Utils.log(Constants.FETCH_LYRICS_LOG, song, artist);
 
-  let lyrics;
+  let lyrics: LyricSourceResult | null = null;
   let sourceMap = LyricProviders.newSourceMap();
   // We depend on the cubey lyrics to fetch certain metadata, so we always call it even if it isn't the top priority
-  /**
-   * @type {ProviderParameters}
-   */
-  let providerParameters = {
+  let providerParameters: ProviderParameters = {
     song,
     artist,
     duration,
@@ -149,14 +150,23 @@ export async function createLyrics(detail: PlayerDetails, signal: AbortSignal): 
   let ytLyricsPromise = LyricProviders.getLyrics(providerParameters, "yt-lyrics").then(lyrics => {
     if (!AppState.areLyricsLoaded && lyrics) {
       Utils.log(
-          "[BetterLyrics] Temporarily Using YT Music Lyrics while we wait for synced lyrics to load"
-        );
-      processLyrics(lyrics, true);
+      "[BetterLyrics] Temporarily Using YT Music Lyrics while we wait for synced lyrics to load"
+      );
+
+      let lyricsWithMeta = {
+        ...lyrics,
+        song: providerParameters.song,
+        artist: providerParameters.artist,
+        duration: providerParameters.duration,
+        videoId: providerParameters.videoId,
+        album: providerParameters.album || "",
+      }
+      processLyrics(lyricsWithMeta, true);
       }
       return lyrics;
     });
   try {
-    let cubyLyrics = await LyricProviders.getLyrics(providerParameters, "musixmatch-richsync");
+    let cubyLyrics = await LyricProviders.getLyrics(providerParameters, "musixmatch-richsync") as CubeyLyricSourceResult;
     if (cubyLyrics && cubyLyrics.album && cubyLyrics.album.length > 0 && album !== cubyLyrics.album) {
       providerParameters.album = cubyLyrics.album;
     }
@@ -173,53 +183,48 @@ export async function createLyrics(detail: PlayerDetails, signal: AbortSignal): 
     if (
       cubyLyrics &&
       cubyLyrics.duration &&
-      cubyLyrics.duration.length > 0 &&
-      String(duration) !== String(cubyLyrics.duration)
+      duration !== cubyLyrics.duration
     ) {
       Utils.log("Using '" + cubyLyrics.duration + "' for duration instead of '" + duration + "'");
-      providerParameters.duration = String(cubyLyrics.duration);
+      providerParameters.duration = cubyLyrics.duration;
     }
   } catch (err) {
     Utils.log(err);
   }
 
   for (let provider of LyricProviders.providerPriority) {
-    if (provider.startsWith("d_")) {
-      // Provider is disabled
-      continue;
+    if (signal.aborted) {
+      return;
     }
-      if (signal.aborted) {
-        return;
-      }
 
     try {
-      lyrics = await LyricProviders.getLyrics(providerParameters, provider);
+      let sourceLyrics = await LyricProviders.getLyrics(providerParameters, provider);
 
-        if (lyrics && lyrics.lyrics && Array.isArray(lyrics.lyrics) && lyrics.lyrics.length > 0) {
-          let ytLyrics = await ytLyricsPromise;
+      if (sourceLyrics && sourceLyrics.lyrics && sourceLyrics.lyrics.length > 0) {
+        let ytLyrics = await ytLyricsPromise as YTLyricSourceResult;
 
-          if (ytLyrics !== null) {
-            let lyricText = "";
-            lyrics.lyrics.forEach(lyric => {
-              lyricText += lyric.words + "\n";
-            });
+        if (ytLyrics !== null) {
+          let lyricText = "";
+          sourceLyrics.lyrics.forEach(lyric => {
+            lyricText += lyric.words + "\n";
+          });
 
-            let matchAmount = stringSimilarity(lyricText.toLowerCase(), ytLyrics.text.toLowerCase());
-            if (matchAmount < 0.5) {
-              Utils.log(
-                `Got lyrics from ${lyrics.source}, but they don't match yt lyrics. Rejecting: Match: ${matchAmount}%`
-              );
-              lyrics = null;
-              continue;
-            }
+          let matchAmount = stringSimilarity(lyricText.toLowerCase(), ytLyrics.text.toLowerCase());
+          if (matchAmount < 0.5) {
+            Utils.log(
+              `Got lyrics from ${sourceLyrics.source}, but they don't match yt lyrics. Rejecting: Match: ${matchAmount}%`
+            );
+            lyrics = null;
+            continue;
           }
-          break;
         }
+        break;
+      }
+
+      lyrics = sourceLyrics;
     } catch (err) {
       Utils.log(err);
     }
-    // lyrics didn't pass validation; don't pass it down
-    lyrics = null;
   }
 
   if (!lyrics) {
@@ -238,10 +243,14 @@ export async function createLyrics(detail: PlayerDetails, signal: AbortSignal): 
     };
   }
 
-  if (isMusicVideo && lyrics.musicVideoSynced !== true && segmentMap) {
+  if (!lyrics.lyrics) {
+    throw new Error("Lyrics.lyrics is null or undefined. Report this bug");
+  }
+
+  if (isMusicVideo && !lyrics.musicVideoSynced && segmentMap) {
     Utils.log(segmentMap);
     // We're in a music video and need to sync lyrics to the music video
-    const allZero = lyrics.lyrics.every(item => item.startTimeMs === "0" || item.startTimeMs === 0);
+    const allZero = lyrics.lyrics.every(item => item.startTimeMs === 0);
 
     if (!allZero) {
       for (let lyricKey in lyrics.lyrics) {
@@ -269,30 +278,37 @@ export async function createLyrics(detail: PlayerDetails, signal: AbortSignal): 
   Utils.log("Got Lyrics from " + lyrics.source);
 
   // Preserve song and artist information in the lyrics data for the "Add Lyrics" button
-  lyrics.song = providerParameters.song;
-  lyrics.artist = providerParameters.artist;
-  lyrics.album = providerParameters.album;
-  lyrics.duration = providerParameters.duration;
-  lyrics.videoId = providerParameters.videoId;
+
+  let lyricsWithMeta: LyricSourceResultWithMeta = {
+    song: providerParameters.song,
+    artist: providerParameters.artist,
+    album: providerParameters.album || "",
+    duration: providerParameters.duration,
+    videoId: providerParameters.videoId,
+    ...lyrics
+  }
 
   AppState.lastLoadedVideoId = detail.videoId;
   if (signal.aborted) {
     return;
   }
-  cacheAndProcessLyrics(cacheKey, lyrics);
+  cacheAndProcessLyrics(cacheKey, lyricsWithMeta);
 }
 
 /**
  * Caches lyrics data and initiates processing.
  *
- * @param {string} cacheKey - Storage key for caching
- * @param {Object} data - Lyrics data to cache and process
+ * @param cacheKey - Storage key for caching
+ * @param data - Lyrics data to cache and process
  */
-function cacheAndProcessLyrics(cacheKey: string, data: any): void {
-  if (data.cacheAllowed === undefined || data.cacheAllowed) {
-    data.version = LYRIC_CACHE_VERSION;
+function cacheAndProcessLyrics(cacheKey: string, data: LyricSourceResultWithMeta): void {
+  if (data.cacheAllowed) {
+    let versionedData: LyricSourceResultWithMetaAndVersion = {
+      version: LYRIC_CACHE_VERSION,
+      ...data
+    }
     const oneWeekInMs = 7 * 24 * 60 * 60 * 1000;
-    Storage.setTransientStorage(cacheKey, JSON.stringify(data), oneWeekInMs);
+    Storage.setTransientStorage(cacheKey, JSON.stringify(versionedData), oneWeekInMs);
   }
   processLyrics(data);
 }
@@ -301,12 +317,12 @@ function cacheAndProcessLyrics(cacheKey: string, data: any): void {
  * Processes lyrics data and prepares it for rendering.
  * Sets language settings, validates data, and initiates DOM injection.
  *
- * @param {Object} data - Processed lyrics data
- * @param keepLoaderVisible {boolean}
- * @param {string} data.language - Language code for the lyrics
- * @param {Array} data.lyrics - Array of lyric lines
+ * @param data - Processed lyrics data
+ * @param keepLoaderVisible
+ * @param data.language - Language code for the lyrics
+ * @param data.lyrics - Array of lyric lines
  */
-function processLyrics(data: any, keepLoaderVisible = false): void {
+function processLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible = false): void {
   const lyrics = data.lyrics;
   if (!lyrics || lyrics.length === 0) {
     throw new Error(Constants.NO_LYRICS_FOUND_LOG);
@@ -333,14 +349,14 @@ function processLyrics(data: any, keepLoaderVisible = false): void {
  * Injects lyrics into the DOM with timing, click handlers, and animations.
  * Creates the complete lyrics interface including synchronization support.
  *
- * @param {Object} data - Complete lyrics data object
- * @param keepLoaderVisible {boolean}
-   * @param {Array} data.lyrics - Array of lyric lines with timing
- * @param {string} [data.source] - Source attribution for lyrics
- * @param {string} [data.sourceHref] - URL for source link
+ * @param data - Complete lyrics data object
+ * @param keepLoaderVisible
+ * @param data.lyrics - Array of lyric lines with timing
+ * @param [data.source] - Source attribution for lyrics
+ * @param [data.sourceHref] - URL for source link
  */
-function injectLyrics(data: any, keepLoaderVisible = false): void {
-  const lyrics = data.lyrics;
+function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible = false): void {
+  const lyrics = data.lyrics!;
   DOM.cleanup();
   let lyricsWrapper = DOM.createLyricsWrapper();
 
@@ -366,7 +382,7 @@ function injectLyrics(data: any, keepLoaderVisible = false): void {
     Utils.log(Constants.TRANSLATION_ENABLED_LOG, items.translationLanguage);
   });
 
-  const allZero = lyrics.every(item => item.startTimeMs === "0" || item.startTimeMs === 0);
+  const allZero = lyrics.every(item => item.startTimeMs === 0);
 
   if (keepLoaderVisible) {
     DOM.renderLoader(true);
@@ -393,47 +409,36 @@ function injectLyrics(data: any, keepLoaderVisible = false): void {
       resolve(data.language);
     }
   });
-  /**
-   *
-   * @typedef {object} PartData
-   * @property {number} time
-   * @property {number} duration
-   * @property {Element} lyricElement
-   * @property {number} animationStartTimeMs
-   */
+  interface PartData {
+  time: number;
+  duration: number;
+  lyricElement: Element;
+  animationStartTimeMs: number;
+}
 
-  /**
-   * @typedef {object} LineData
-   * @property {Element} lyricElement
-   * @property {number} time
-   * @property {number} duration
-   * @property {PartData[]} parts
-   * @property {boolean} isScrolled
-   * @property {number} animationStartTimeMs
-   * @property {boolean} isAnimationPlayStatePlaying
-   * @property {number} accumulatedOffsetMs
-   * @property {boolean} isAnimating
-   * @property {boolean} isSelected
-   */
+interface LineData {
+  lyricElement: Element;
+  time: number;
+  duration: number;
+  parts: PartData[];
+  isScrolled: boolean;
+  animationStartTimeMs: number;
+  isAnimationPlayStatePlaying: boolean;
+  accumulatedOffsetMs: number;
+  isAnimating: boolean;
+  isSelected: boolean;
+}
 
-  /**
-   * @typedef {object} LyricsData
-   * @property {LineData[]} lines
-   * @property {SyncType} syncType
-   */
+interface LyricsData {
+  lines: LineData[];
+  syncType: SyncType;
+}
 
-  /**
-   * @typedef {"richsync"|"synced"|"none"} SyncType
-   */
+type SyncType = "richsync" | "synced" | "none";
 
-  /**
-   * @type {LineData[]}
-   */
-  let lines = [];
-  /**
-   * @type {SyncType}
-   */
-  let syncType = "synced";
+
+  let lines: LineData[] = [];
+  let syncType: SyncType = "synced";
 
   lyrics.forEach((item, lineIndex) => {
     if (!item.parts || item.parts.length === 0) {
@@ -442,8 +447,8 @@ function injectLyrics(data: any, keepLoaderVisible = false): void {
 
       words.forEach((word, index) => {
         word = word.trim().length < 1 ? word : word + " ";
-        item.parts.push({
-          startTimeMs: parseFloat(item.startTimeMs) + index * 50,
+        item.parts!.push({
+          startTimeMs: item.startTimeMs + index * 50,
           words: word,
           durationMs: 0,
         });
@@ -457,14 +462,11 @@ function injectLyrics(data: any, keepLoaderVisible = false): void {
     let lyricElement = document.createElement("div");
     lyricElement.classList.add("blyrics--line");
 
-    /**
-     *
-     * @type LineData
-     */
-    let line = {
+
+    let line: LineData = {
       lyricElement: lyricElement,
-      time: parseFloat(item.startTimeMs) / 1000,
-      duration: parseFloat(item.durationMs) / 1000,
+      time: item.startTimeMs / 1000,
+      duration: item.durationMs / 1000,
       parts: [],
       isScrolled: false,
       animationStartTimeMs: Infinity,
@@ -475,10 +477,7 @@ function injectLyrics(data: any, keepLoaderVisible = false): void {
     };
 
     // To add rtl elements in reverse to the dom
-    /**
-     * @type {HTMLSpanElement[]}
-     */
-    let rtlBuffer = [];
+    let rtlBuffer: HTMLSpanElement[] = [];
     let isAllRtl = true;
 
     item.parts.forEach(part => {
@@ -499,13 +498,9 @@ function injectLyrics(data: any, keepLoaderVisible = false): void {
         span.classList.add(Constants.RTL_CLASS);
       }
 
-      /**
-       *
-       * @type {PartData}
-       */
-      let partData = {
-        time: parseFloat(part.startTimeMs) / 1000,
-        duration: parseFloat(part.durationMs) / 1000,
+      let partData: PartData = {
+        time: part.startTimeMs / 1000,
+        duration: part.durationMs / 1000,
         lyricElement: span,
         animationStartTimeMs: Infinity,
       };
@@ -692,10 +687,10 @@ function injectLyrics(data: any, keepLoaderVisible = false): void {
  * @author Stephen Brown
  * Source: https://github.com/stephenjjbrown/string-similarity-js/
  * @licence MIT License - https://github.com/stephenjjbrown/string-similarity-js/blob/master/LICENSE.md
- * @param {string} str1 First string to match
- * @param {string} str2 Second string to match
- * @param {number} [substringLength=2] Optional. Length of substring to be used in calculating similarity. Default 2.
- * @param {boolean} [caseSensitive=false] Optional. Whether you want to consider case in string matching. Default false;
+ * @param str1 First string to match
+ * @param str2 Second string to match
+ * @param [substringLength=2] Optional. Length of substring to be used in calculating similarity. Default 2.
+ * @param [caseSensitive=false] Optional. Whether you want to consider case in string matching. Default false;
  * @returns Number between 0 and 1, with 0 being a low match score.
  */
 const stringSimilarity = (str1: string, str2: string, substringLength = 2, caseSensitive = false): number => {
@@ -707,12 +702,12 @@ const stringSimilarity = (str1: string, str2: string, substringLength = 2, caseS
   const map = new Map<string, number>();
   for (let i = 0; i < str1.length - (substringLength - 1); i++) {
     const substr1 = str1.substring(i, i + substringLength);
-    map.set(substr1, map.has(substr1) ? map.get(substr1) + 1 : 1);
+    map.set(substr1, map.has(substr1) ? map.get(substr1)! + 1 : 1);
   }
   let match = 0;
   for (let j = 0; j < str2.length - (substringLength - 1); j++) {
     let substr2 = str2.substring(j, j + substringLength);
-    let count = map.has(substr2) ? map.get(substr2) : 0;
+    let count = map.has(substr2) ? map.get(substr2)! : 0;
     if (count > 0) {
       map.set(substr2, count - 1);
       match++;
@@ -740,8 +735,8 @@ const nonLatinRegex = /[^ -ÿ‘-”]/;
 
 /**
  * Checks if a given string contains any non-Latin characters.
- * @param {string} text The string to check.
- * @returns {boolean} True if a non-Latin character is found, otherwise false.
+ * @param text The string to check.
+ * @returns True if a non-Latin character is found, otherwise false.
  */
 function containsNonLatin(text: string): boolean {
   return nonLatinRegex.test(text);

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Function to save user options
 
 import {browser} from "../../extension.config.js";

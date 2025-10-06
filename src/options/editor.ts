@@ -1,4 +1,3 @@
-// @ts-nocheck
 import CodeMirror from "codemirror/src/edit/CodeMirror";
 
 let saveTimeout: number;

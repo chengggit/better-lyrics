@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import * as Utils from "../../core/utils";
 
 interface Segment {
@@ -38,9 +36,9 @@ function delay(ms: number): Promise<void> {
 
 /**
  *
- * @param videoId {string}
- * @param maxRetries {number}
- * @return {Promise<{hasLyrics: boolean, lyrics: string, sourceText: string}>}
+ * @param videoId
+ * @param maxRetries
+ * @return
  */
 export async function getLyrics(videoId: string, maxRetries = 250): Promise<LyricsInfo> {
   if (videoIdToLyricsMap.has(videoId)) {
@@ -73,9 +71,9 @@ export async function getLyrics(videoId: string, maxRetries = 250): Promise<Lyri
 
 /**
  *
- * @param videoId {String}
- * @param maxCheckCount {number}
- * @return {Promise<{counterpartVideoId: (string | null), segmentMap: (SegmentMap | null)}>}
+ * @param videoId
+ * @param maxCheckCount
+ * @return
  */
 export async function getMatchingSong(videoId: string, maxCheckCount = 250): Promise<CounterpartInfo | null> {
   if (counterpartVideoIdMap.has(videoId)) {
@@ -101,8 +99,8 @@ export async function getMatchingSong(videoId: string, maxCheckCount = 250): Pro
 }
 
 /**
- * @param videoId {string}
- * @return {Promise<string | null | undefined>}
+ * @param videoId
+ * @return
  */
 export async function getSongAlbum(videoId: string): Promise<string | null | undefined> {
   for (let i = 0; i < 250; i++) {

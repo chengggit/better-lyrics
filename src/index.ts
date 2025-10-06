@@ -91,7 +91,7 @@ export async function modify(): Promise<void> {
  * Handles modifications to player state and manages lyric injection.
  * Ensures only one lyric injection process runs at a time by queueing subsequent calls.
  *
- * @param {PlayerDetails} detail - Player state details
+ * @param detail - Player state details
  */
 export function handleModifications(detail: PlayerDetails): void {
   if (AppState.lyricInjectionPromise) {

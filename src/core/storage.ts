@@ -1,4 +1,3 @@
-// @ts-nocheck
 import * as Utils from "./utils";
 import * as Dom from "../modules/ui/dom";
 import * as Constants from "./constants";
