@@ -3,7 +3,8 @@ import * as Constants from "../../core/constants";
 import * as Utils from "../../core/utils";
 import * as Translation from "../lyrics/translation";
 import * as Storage from "../../core/storage"
-import * as BetterLyrics from "../../index"
+import {AppState} from "../../index";
+import * as BetterLyrics from "../../index";
 
 /**
  * Handles settings initialization and applies user preferences.
@@ -162,11 +163,11 @@ export function listenForPopupMessages() {
       Utils.setUpLog();
       this.hideCursorOnIdle();
       this.handleSettings();
-      BetterLyrics.shouldInjectAlbumArt = "Unknown";
+      AppState.shouldInjectAlbumArt = "Unknown";
       this.onAlbumArtEnabled(
-        () => (BetterLyrics.shouldInjectAlbumArt = true),
+        () => (AppState.shouldInjectAlbumArt = true),
         () => {
-          BetterLyrics.shouldInjectAlbumArt = false;
+          AppState.shouldInjectAlbumArt = false;
           DOM.removeAlbumArtFromLayout();
         }
       );

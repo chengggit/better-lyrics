@@ -24,34 +24,38 @@ import * as Providers from "./modules/lyrics/providers";
 import * as Lyrics from "./modules/lyrics/lyrics";
 import * as Storage from "./core/storage";
 
-/** @type {boolean} Whether lyrics are currently syncing with playback */
-export let areLyricsTicking = false;
-/** @type {LyricsData|null} Current lyric data object */
-export let lyricData = null;
-/** @type {boolean} Whether lyrics have been successfully loaded */
-export let areLyricsLoaded = false;
-/** @type {boolean} Whether lyric injection has failed */
-export let lyricInjectionFailed = false;
-/** @type {string|null} ID of the last processed video */
-export let lastVideoId = null;
-/** @type {Lyrics|null} Details of the last processed video */
-export let lastVideoDetails = null;
-/** @type {Promise|null} Promise for the ongoing lyric injection process */
-export let lyricInjectionPromise = null;
-/** @type {boolean} Whether lyric injection is queued */
-export let queueLyricInjection = false;
-/** @type {boolean} Whether album art injection is queued */
-export let queueAlbumArtInjection = false;
-/** @type {string|boolean} Album art injection status */
-export let shouldInjectAlbumArt = "Unknown";
-/** @type {boolean} Whether song details injection is queued */
-export let queueSongDetailsInjection = false;
-/** @type {number|null} Timeout ID for loader animation end */
-export let loaderAnimationEndTimeout = null;
-/** @type {string|null} ID of the last loaded video */
-export let lastLoadedVideoId = null;
-/** @type {AbortController|null} Abort controller for lyric fetching */
-let lyricAbortController = null;
+
+export let AppState = {
+  /** @type {boolean} Whether lyrics are currently syncing with playback */
+  areLyricsTicking: false,
+  /** @type {LyricsData|null} Current lyric data object */
+  lyricData: null,
+  /** @type {boolean} Whether lyrics have been successfully loaded */
+  areLyricsLoaded: false,
+  /** @type {boolean} Whether lyric injection has failed */
+  lyricInjectionFailed: false,
+  /** @type {string | null} ID of the last processed video */
+  lastVideoId: null,
+  /** @type {string|null} Details of the last processed video */
+  lastVideoDetails: null,
+  /** @type {Promise|null} Promise for the ongoing lyric injection process */
+  lyricInjectionPromise: null,
+  /** @type {boolean} Whether lyric injection is queued */
+  queueLyricInjection: false,
+  /** @type {boolean} Whether album art injection is queued */
+  queueAlbumArtInjection: false,
+  /** @type {string|boolean} Album art injection status */
+  shouldInjectAlbumArt: "Unknown",
+  /** @type {boolean} Whether song details injection is queued */
+  queueSongDetailsInjection: false,
+  /** @type {number|null} Timeout ID for loader animation end */
+  loaderAnimationEndTimeout: null,
+  /** @type {string|null} ID of the last loaded video */
+  lastLoadedVideoId: null,
+  /** @type {AbortController|null} Abort controller for lyric fetching */
+  lyricAbortController: null,
+}
+
 
 /**
  * Initializes the BetterLyrics extension by setting up all required components.
@@ -90,22 +94,24 @@ export async function modify() {
  * @param {PlayerDetails} detail - Player state details
  */
 export function handleModifications(detail) {
-  if (this.lyricInjectionPromise) {
-    this.lyricAbortController.abort("New song is being loaded");
-    this.lyricInjectionPromise.then(() => {
-      this.lyricInjectionPromise = null;
+  if (AppState.lyricInjectionPromise) {
+    console.log("Waiting for " + AppState.lyricInjectionPromise);
+    AppState.lyricAbortController.abort("New song is being loaded");
+    AppState.lyricInjectionPromise.then(() => {
+      AppState.lyricInjectionPromise = null;
       this.handleModifications(detail);
     });
   } else {
-    this.lyricAbortController = new AbortController();
-    this.lyricInjectionPromise = Lyrics.createLyrics(detail, this.lyricAbortController.signal)
+    console.log("Injecting Lyrics");
+    AppState.lyricAbortController = new AbortController();
+    AppState.lyricInjectionPromise = Lyrics.createLyrics(detail, AppState.lyricAbortController.signal)
       .then(() => {
         return DOM.tickLyrics(detail.currentTime, Date.now(), detail.playing);
       })
       .catch(err => {
-        Utils.log(this.GENERAL_ERROR_LOG, err);
-        this.areLyricsLoaded = false;
-        this.lyricInjectionFailed = true;
+        Utils.log(Constants.GENERAL_ERROR_LOG, err);
+        AppState.areLyricsLoaded = false;
+        AppState.lyricInjectionFailed = true;
       });
   }
 }
@@ -115,7 +121,7 @@ export function handleModifications(detail) {
  * Forces the extension to re-fetch lyrics for the current video.
  */
 export function reloadLyrics() {
-  this.lastVideoId = null;
+  AppState.lastVideoId = null;
 }
 
 /**

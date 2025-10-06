@@ -160,7 +160,7 @@ const CUBEY_LYRICS_API_URL = "https://lyrics.api.dacubeking.com/";
  * @property {AbortSignal} signal
    */
 
-import {browser} from "../../../extension.config";
+import {browser} from "../../../extension.config.js";
 import * as Utils from "../../core/utils";
 import * as Constants from "../../core/constants";
 import * as RequestSniffing from "./requestSniffer";

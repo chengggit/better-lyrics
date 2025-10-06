@@ -77,7 +77,7 @@ export async function onRomanizationEnabled(callback) {
 export function onTranslationEnabled(callback) {
   Storage.getStorage(["isTranslateEnabled", "translationLanguage"], items => {
     if (items.isTranslateEnabled) {
-      this.currentTranslationLanguage = items.translationLanguage || "en";
+      currentTranslationLanguage = items.translationLanguage || "en";
       callback(items);
     }
   });
@@ -98,5 +98,9 @@ export function getRomanizationFromCache(text) {
   return cache.romanization.get(cacheKey) || null;
 }
 
-export let currentTranslationLanguage = "en";
+let currentTranslationLanguage = "en";
+
+export function getCurrentTranslationLanguage() {
+  return currentTranslationLanguage;
+}
 

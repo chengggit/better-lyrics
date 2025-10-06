@@ -1,7 +1,7 @@
 import * as Utils from "../../core/utils";
 import * as Constants from "../../core/constants";
-import * as BetterLyrics from "../../index";
 import * as Observer from "./observer";
+import {AppState} from "../../index";
 
 /**
  * Creates or reuses the lyrics wrapper element and sets up scroll event handling.
@@ -146,7 +146,7 @@ export function renderLoader(small = false) {
     }
   loaderMayBeActive = true;
   try {
-    clearTimeout(BetterLyrics.loaderAnimationEndTimeout);
+    clearTimeout(AppState.loaderAnimationEndTimeout);
     const tabRenderer = document.querySelector(Constants.TAB_RENDERER_SELECTOR);
     let loaderWrapper = document.getElementById(Constants.LYRICS_LOADER_ID);
     if (!loaderWrapper) {
@@ -192,12 +192,12 @@ export function flushLoader(showNoSyncAvailable = false) {
         loaderWrapper.setAttribute("no-sync-available", "");
       }
     if (loaderWrapper?.hasAttribute("active")) {
-      clearTimeout(BetterLyrics.loaderAnimationEndTimeout);
+      clearTimeout(AppState.loaderAnimationEndTimeout);
       loaderWrapper.dataset.animatingOut = true;
       loaderWrapper.removeAttribute("active");
 
       loaderWrapper.addEventListener("transitionend", function handleTransitionEnd(_event) {
-        clearTimeout(BetterLyrics.loaderAnimationEndTimeout);
+        clearTimeout(AppState.loaderAnimationEndTimeout);
         loaderWrapper.dataset.animatingOut = false;
         loaderMayBeActive = false;
         loaderWrapper.removeEventListener("transitionend", handleTransitionEnd);
@@ -210,7 +210,7 @@ export function flushLoader(showNoSyncAvailable = false) {
           timeout += toMs(transitionDelay);
         }
 
-      BetterLyrics.loaderAnimationEndTimeout = setTimeout(() => {
+      AppState.loaderAnimationEndTimeout = setTimeout(() => {
         loaderWrapper.dataset.animatingOut = String(false);
         loaderMayBeActive = false;
         Utils.log(Constants.LOADER_ANIMATION_END_FAILED);
@@ -430,7 +430,7 @@ export function cleanup() {
  */
 export function injectGetSongInfo() {
   const s = document.createElement("script");
-  s.src = chrome.runtime.getURL("scripts/script.js");
+  s.src = chrome.runtime.getURL("script.js");
   s.id = "blyrics-script";
   s.onload = function () {
     this.remove();
@@ -486,7 +486,7 @@ export function getCSSDurationInMs(lyricsElement, property) {
  */
 export function tickLyrics(currentTime, eventCreationTime, isPlaying = true, smoothScroll = true) {
   const now = Date.now();
-  if (this.isLoaderActive() || !BetterLyrics.areLyricsTicking || (currentTime === 0 && !isPlaying)) {
+  if (this.isLoaderActive() || !AppState.areLyricsTicking || (currentTime === 0 && !isPlaying)) {
     return;
   }
   animEngineState.lastTime = currentTime;
@@ -515,14 +515,14 @@ export function tickLyrics(currentTime, eventCreationTime, isPlaying = true, smo
     const lyricsElement = document.getElementsByClassName(Constants.LYRICS_CLASS)[0];
     // If lyrics element doesn't exist, clear the interval and return silently
     if (!lyricsElement) {
-      BetterLyrics.areLyricsTicking = false;
+      AppState.areLyricsTicking = false;
       Utils.log(Constants.NO_LYRICS_ELEMENT_LOG);
       return;
     }
 
-    let lyricData = BetterLyrics.lyricData;
+    let lyricData = AppState.lyricData;
     if (!lyricData) {
-      BetterLyrics.areLyricsTicking = false;
+      AppState.areLyricsTicking = false;
       Utils.log("Lyrics are ticking, but lyricData are null!");
       return;
     }
@@ -536,7 +536,7 @@ export function tickLyrics(currentTime, eventCreationTime, isPlaying = true, smo
     const lyricScrollTime =
       currentTime + this.getCSSDurationInMs(lyricsElement, "--blyrics-scroll-timing-offset") / 1000;
 
-    const lines = BetterLyrics.lyricData.lines;
+    const lines = AppState.lyricData.lines;
 
     let selectedLyricHeight = 0;
     let targetScrollPos = 0;
@@ -741,7 +741,7 @@ export function tickLyrics(currentTime, eventCreationTime, isPlaying = true, smo
  * Called when a new lyrics element is added to trigger re-sync.
  */
 export function lyricsElementAdded() {
-  if (!BetterLyrics.areLyricsTicking) {
+  if (!AppState.areLyricsTicking) {
     return;
   }
   this.tickLyrics(

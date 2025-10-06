@@ -5,6 +5,7 @@ import * as Constants from "../../core/constants"
 import * as BetterLyrics from "../../index"
 import * as Utils from "../../core/utils";
 import * as DOM from "./dom";
+import {AppState} from "../../index";
 
 /**
  * Enables the lyrics tab and prevents it from being disabled by YouTube Music.
@@ -89,7 +90,7 @@ export function lyricReloader() {
 
     tab2.addEventListener("click", () => {
       Dom.getResumeScrollElement().classList.remove("blyrics-hidden");
-      if (!BetterLyrics.areLyricsLoaded) {
+      if (!AppState.areLyricsLoaded) {
         Utils.log(Constants.LYRICS_TAB_CLICKED_LOG);
         DOM.cleanup();
         DOM.renderLoader();
@@ -122,17 +123,17 @@ export function initializeLyrics() {
       const currentVideoDetails = detail.song + " " + detail.artist;
 
       if (
-        currentVideoId !== BetterLyrics.lastVideoId ||
-        currentVideoDetails !== BetterLyrics.lastVideoDetails
+        currentVideoId !== AppState.lastVideoId ||
+        currentVideoDetails !== AppState.lastVideoDetails
       ) {
         try {
-          if (currentVideoId === BetterLyrics.lastVideoId && BetterLyrics.areLyricsLoaded) {
+          if (currentVideoId === AppState.lastVideoId && AppState.areLyricsLoaded) {
             console.log(Constants.SKIPPING_LOAD_WITH_META);
             return; // We already loaded this video
           }
         } finally {
-          BetterLyrics.lastVideoId = currentVideoId;
-          BetterLyrics.lastVideoDetails = currentVideoDetails;
+          AppState.lastVideoId = currentVideoId;
+          AppState.lastVideoDetails = currentVideoDetails;
         }
 
         if (!detail.song || !detail.artist) {
@@ -140,41 +141,41 @@ export function initializeLyrics() {
         }
 
         Utils.log(Constants.SONG_SWITCHED_LOG, detail.videoId);
-        BetterLyrics.areLyricsTicking = false;
-        BetterLyrics.areLyricsLoaded = false;
+        AppState.areLyricsTicking = false;
+        AppState.areLyricsLoaded = false;
 
-        BetterLyrics.queueLyricInjection = true;
-        BetterLyrics.queueAlbumArtInjection = true;
-        BetterLyrics.queueSongDetailsInjection = true;
+        AppState.queueLyricInjection = true;
+        AppState.queueAlbumArtInjection = true;
+        AppState.queueSongDetailsInjection = true;
       }
 
       if (
-        BetterLyrics.queueSongDetailsInjection &&
+        AppState.queueSongDetailsInjection &&
         detail.song &&
         detail.artist &&
         document.getElementById("main-panel")
       ) {
-        BetterLyrics.queueSongDetailsInjection = false;
+        AppState.queueSongDetailsInjection = false;
         DOM.injectSongAttributes(detail.song, detail.artist);
       }
 
-      if (BetterLyrics.queueAlbumArtInjection === true && BetterLyrics.shouldInjectAlbumArt === true) {
-        BetterLyrics.queueAlbumArtInjection = false;
+      if (AppState.queueAlbumArtInjection === true && AppState.shouldInjectAlbumArt === true) {
+        AppState.queueAlbumArtInjection = false;
         DOM.addAlbumArtToLayout(currentVideoId);
       }
 
-      if (BetterLyrics.lyricInjectionFailed) {
+      if (AppState.lyricInjectionFailed) {
         const tabSelector = document.getElementsByClassName(Constants.TAB_HEADER_CLASS)[1];
         if (tabSelector && tabSelector.getAttribute("aria-selected") !== "true") {
-          BetterLyrics.lyricInjectionFailed = false; //ignore failure b/c the tab isn't visible
+          AppState.lyricInjectionFailed = false; //ignore failure b/c the tab isn't visible
         }
       }
 
-      if (BetterLyrics.queueLyricInjection || BetterLyrics.lyricInjectionFailed) {
+      if (AppState.queueLyricInjection || AppState.lyricInjectionFailed) {
         const tabSelector = document.getElementsByClassName(Constants.TAB_HEADER_CLASS)[1];
         if (tabSelector) {
-          BetterLyrics.queueLyricInjection = false;
-          BetterLyrics.lyricInjectionFailed = false;
+          AppState.queueLyricInjection = false;
+          AppState.lyricInjectionFailed = false;
           if (tabSelector.getAttribute("aria-selected") !== "true") {
             Settings.onAutoSwitchEnabled(() => {
               tabSelector.click();
@@ -195,7 +196,7 @@ export function initializeLyrics() {
  */
 export function scrollEventHandler() {
   const tabSelector = document.getElementsByClassName(Constants.TAB_HEADER_CLASS)[1];
-  if (tabSelector.getAttribute("aria-selected") !== "true" || !BetterLyrics.areLyricsTicking) {
+  if (tabSelector.getAttribute("aria-selected") !== "true" || !AppState.areLyricsTicking) {
     return;
   }
 

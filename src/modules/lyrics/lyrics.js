@@ -11,11 +11,11 @@ import * as Utils from "../../core/utils";
 import * as Constants from "../../core/constants";
 import * as RequestSniffer from "./requestSniffer";
 import * as DOM from "../ui/dom";
-import * as BetterLyrics from "../../index";
 import * as Translation from "./translation";
 import * as LyricProviders from "./providers";
 import * as RequestSniffing from "./requestSniffer";
 import * as Storage from "../../core/storage"
+import {AppState} from "../../index";
 
 /** Current version of the lyrics cache format */
 const LYRIC_CACHE_VERSION = "1.2.0";
@@ -82,8 +82,8 @@ export async function createLyrics(detail, signal) {
   if (
     (!matchingSong ||
       !matchingSong.counterpartVideoId ||
-      matchingSong.counterpartVideoId !== BetterLyrics.lastLoadedVideoId) &&
-    BetterLyrics.lastLoadedVideoId !== videoId
+      matchingSong.counterpartVideoId !== AppState.lastLoadedVideoId) &&
+      AppState.lastLoadedVideoId !== videoId
   ) {
     DOM.renderLoader(); // Only render the loader after we've checked the cache & we're not switching between audio and video
     Translation.clearCache();
@@ -146,7 +146,7 @@ export async function createLyrics(detail, signal) {
     };
 
   let ytLyricsPromise = LyricProviders.getLyrics(providerParameters, "yt-lyrics").then(lyrics => {
-    if (!BetterLyrics.areLyricsLoaded && lyrics) {
+    if (!AppState.areLyricsLoaded && lyrics) {
       Utils.log(
           "[BetterLyrics] Temporarily Using YT Music Lyrics while we wait for synced lyrics to load"
         );
@@ -274,7 +274,7 @@ export async function createLyrics(detail, signal) {
   lyrics.duration = providerParameters.duration;
   lyrics.videoId = providerParameters.videoId;
 
-  BetterLyrics.lastLoadedVideoId = detail.videoId;
+  AppState.lastLoadedVideoId = detail.videoId;
   if (signal.aborted) {
     return;
   }
@@ -552,7 +552,7 @@ function injectLyrics(data, keepLoaderVisible = false) {
         }, true);player.playVideo();`
       );
       lyricElement.addEventListener("click", _e => {
-        DOM.scrollResumeTime = 0;
+        DOM.animEngineState.scrollResumeTime = 0;
       });
     } else {
         lyricElement.style.cursor = "unset";
@@ -570,7 +570,7 @@ function injectLyrics(data, keepLoaderVisible = false) {
 
     const translatedResult = Translation.getTranslationFromCache(
         item.words,
-      Translation.currentTranslationLanguage
+        Translation.getCurrentTranslationLanguage()
       );
       if (translatedResult) {
         let translatedLine = document.createElement("div");
@@ -614,7 +614,7 @@ function injectLyrics(data, keepLoaderVisible = false) {
         Translation.onTranslationEnabled(async items => {
           if (
             lyricElement.dataset.translated === "true" &&
-            (items.translationLanguage || "en") === Translation.currentTranslationLanguage
+            (items.translationLanguage || "en") === Translation.getCurrentTranslationLanguage()
           )
             return;
 
@@ -653,12 +653,12 @@ function injectLyrics(data, keepLoaderVisible = false) {
     }
   });
 
-  DOM.skipScrolls = 2;
-  DOM.skipScrollsDecayTimes = [];
-  for (let i = 0; i < DOM.skipScrolls; i++) {
-    DOM.skipScrollsDecayTimes.push(Date.now() + 2000);
+  DOM.animEngineState.skipScrolls = 2;
+  DOM.animEngineState.skipScrollsDecayTimes = [];
+  for (let i = 0; i < DOM.animEngineState.skipScrolls; i++) {
+    DOM.animEngineState.skipScrollsDecayTimes.push(Date.now() + 2000);
   }
-  DOM.scrollResumeTime = 0;
+  DOM.animEngineState.scrollResumeTime = 0;
 
   if (lyrics[0].words !== Constants.NO_LYRICS_TEXT) {
     DOM.addFooter(data.source, data.sourceHref, data.song, data.artist, data.album, data.duration);
@@ -675,18 +675,18 @@ function injectLyrics(data, keepLoaderVisible = false) {
   lyricsContainer.appendChild(spacingElement);
 
   if (!allZero) {
-    BetterLyrics.areLyricsTicking = true;
+    AppState.areLyricsTicking = true;
   } else {
     Utils.log(Constants.SYNC_DISABLED_LOG);
     syncType = "none";
   }
 
-  BetterLyrics.lyricData = {
+  AppState.lyricData = {
     lines: lines,
     syncType: syncType,
   };
 
-  BetterLyrics.areLyricsLoaded = true;
+  AppState.areLyricsLoaded = true;
 }
 
 /**

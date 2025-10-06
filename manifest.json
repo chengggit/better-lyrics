@@ -30,7 +30,7 @@
         "*://music.youtube.com/*"
       ],
       "resources": [
-        "scripts/script.js",
+        "script.js",
         "css/ytmusic.css",
         "css/blyrics.css",
         "css/disablestylizedanimations.css",
@@ -70,7 +70,7 @@
         "*://music.youtube.com/*"
       ],
       "js": [
-        "src/earlyInject.js"
+        "earlyInject.js"
       ],
       "run_at": "document_start",
       "world": "MAIN"

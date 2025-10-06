@@ -1,4 +1,4 @@
-import {browser} from "../../extension.config";
+import {browser} from "../../extension.config.js";
 
 let saveTimeout;
 let editor;
