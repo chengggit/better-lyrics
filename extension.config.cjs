@@ -6,7 +6,7 @@ module.exports = {
   browser: {
     chrome: {
       preferences: { theme: "dark" },
-      browserFlags: ["--starting-url", "https://music.youtube.com/watch?v=Emq17wn71jA&list=RDAMVMxe9j9hPn6Bc"],
+      browserFlags: ["--starting-url", "https://music.youtube.com/watch?v=Emq17wn71jA&list=RDAMVMxe9j9hPn6Bc", "--remote-debugging-port=9222"],
       profile: "dist/chrome-profile",
     },
     firefox: {

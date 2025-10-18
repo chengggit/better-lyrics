@@ -429,20 +429,6 @@ export function cleanup(): void {
   clearLyrics();
 }
 
-/**
- * Injects the player information script into the page.
- */
-export function injectGetSongInfo(): void {
-  const s = document.createElement("script");
-  s.src = chrome.runtime.getURL("script.js");
-  s.id = "blyrics-script";
-  s.onload = function () {
-    //@ts-ignore
-    this.remove();
-  };
-  (document.head || document.documentElement).appendChild(s);
-}
-
 interface AnimEngineState {
   skipScrolls: number;
   skipScrollsDecayTimes: number[];

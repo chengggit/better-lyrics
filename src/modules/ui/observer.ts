@@ -4,7 +4,7 @@ import * as Constants from "../../core/constants";
 import * as BetterLyrics from "../../index";
 import * as Utils from "../../core/utils";
 import { AppState } from "../../index";
-import { PlayerDetails } from "../../index";
+import type {PlayerDetails} from "../../index";
 
 /**
  * Enables the lyrics tab and prevents it from being disabled by YouTube Music.
@@ -92,6 +92,7 @@ export function lyricReloader(): void {
         Utils.log(Constants.LYRICS_TAB_CLICKED_LOG);
         Dom.cleanup();
         Dom.renderLoader();
+        BetterLyrics.reloadLyrics();
       }
     });
 
@@ -144,7 +145,7 @@ export function initializeLyrics(): void {
       Dom.injectSongAttributes(detail.song, detail.artist);
     }
 
-    if (AppState.queueAlbumArtInjection === true && AppState.shouldInjectAlbumArt === true) {
+    if (AppState.queueAlbumArtInjection && AppState.shouldInjectAlbumArt === true) {
       AppState.queueAlbumArtInjection = false;
       Dom.addAlbumArtToLayout(currentVideoId);
     }

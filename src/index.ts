@@ -7,7 +7,7 @@ import * as RequestSniffing from "./modules/lyrics/requestSniffer";
 import * as Providers from "./modules/lyrics/providers";
 import * as Lyrics from "./modules/lyrics/lyrics";
 import * as Storage from "./core/storage";
-import { LyricsData } from "./modules/lyrics/lyrics";
+import type {LyricsData} from "./modules/lyrics/lyrics";
 
 export interface PlayerDetails {
   currentTime: number;
@@ -135,4 +135,3 @@ export function init(): void {
 init();
 
 RequestSniffing.setupRequestSniffer();
-DOM.injectGetSongInfo();
