@@ -34,6 +34,7 @@ let saveTimeout: number;
 let editor: EditorView;
 let currentThemeName: string | null = null;
 let isUserTyping = false;
+let saveCount = 0;
 const SAVE_DEBOUNCE_DELAY = 1000;
 
 // Storage quota limits (in bytes)
@@ -216,6 +217,7 @@ const saveToStorageWithFallback = async (
 };
 
 function saveToStorage(isTheme = false) {
+  saveCount++;
   const css = editor.state.doc.toString();
 
   if (!isTheme && isUserTyping) {
@@ -278,49 +280,58 @@ function saveToStorage(isTheme = false) {
   isUserTyping = false;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+async function loadCustomCSS(): Promise<string> {
+  // Enhanced loading function to check both storage types
+  let css: string|null = null;
+  try {
+    // First check which storage type was used
+    const syncData = await chrome.storage.sync.get(["cssStorageType", "customCSS"]);
+
+    if (syncData.cssStorageType === "local") {
+      // Load from local storage
+      const localData = await chrome.storage.local.get("customCSS");
+      css = localData.customCSS;
+    } else {
+      // Load from sync storage or fallback to sync if no type is set
+      css =  syncData.customCSS;
+    }
+  } catch (error) {
+    console.error("Error loading CSS:", error);
+    // Fallback: try both storages
+    try {
+      const localData = await chrome.storage.local.get("customCSS");
+      if (localData.customCSS) {
+        css = localData.customCSS
+      }
+
+      const syncData = await chrome.storage.sync.get("customCSS");
+      css = syncData.customCSS;
+    } catch (fallbackError) {
+      console.error("Fallback loading failed:", fallbackError);
+    }
+  }
+  return css || "";
+}
+
+async function setThemeName() {
+  await chrome.storage.sync.get("themeName").then((syncData) => {
+    if (syncData.themeName && themeSelector) {
+      const themeIndex = THEMES.findIndex(theme => theme.name === syncData.themeName);
+      if (themeIndex !== -1) {
+        themeSelector.value = themeIndex.toString();
+        currentThemeName = syncData.themeName;
+      } else {
+        themeSelector.value = String(0);
+      }
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
   console.log("DOM loaded");
   editor = createEditorView(createEditorState("Loading..."), document.getElementById("editor")!);
   document.getElementById("editor-popout-button")?.addEventListener("click", () => {
     chrome.tabs.create({ url: chrome.runtime.getURL("pages/standalone-editor.html") });
-  });
-
-  // Enhanced loading function to check both storage types
-  const loadCustomCSS = async (): Promise<string> => {
-    try {
-      // First check which storage type was used
-      const syncData = await chrome.storage.sync.get(["cssStorageType", "customCSS"]);
-
-      if (syncData.cssStorageType === "local") {
-        // Load from local storage
-        const localData = await chrome.storage.local.get("customCSS");
-        return localData.customCSS || "";
-      } else {
-        // Load from sync storage or fallback to sync if no type is set
-        return syncData.customCSS || "";
-      }
-    } catch (error) {
-      console.error("Error loading CSS:", error);
-      // Fallback: try both storages
-      try {
-        const localData = await chrome.storage.local.get("customCSS");
-        if (localData.customCSS) return localData.customCSS;
-
-        const syncData = await chrome.storage.sync.get("customCSS");
-        return syncData.customCSS || "";
-      } catch (fallbackError) {
-        console.error("Fallback loading failed:", fallbackError);
-        return "";
-      }
-    }
-  };
-
-  // Load saved content with enhanced loading
-  loadCustomCSS().then(css => {
-    console.log("Loaded Custom CSS:",  css)
-    if (css !== null) {
-      editor.setState(createEditorState(css));
-    }
   });
 
   // Load themes
@@ -331,19 +342,15 @@ document.addEventListener("DOMContentLoaded", () => {
     themeSelector?.appendChild(option);
   });
 
-  // Enhanced theme and CSS loading
-  Promise.all([chrome.storage.sync.get(["themeName"] as any), loadCustomCSS()]).then(([syncData, css]) => {
-    if (syncData.themeName) {
-      const themeIndex = THEMES.findIndex(theme => theme.name === syncData.themeName);
-      if (themeIndex !== -1 && themeSelector) {
-        themeSelector.value = themeIndex.toString();
-        currentThemeName = syncData.themeName;
-      }
-    }
-    if (css) {
-      editor.setState(createEditorState(css));
-    }
+
+  let setSelectedThemePromise = setThemeName();
+
+  let loadCustomCssPromise = loadCustomCSS().then(result => {
+    console.log("Loaded Custom CSS:",  result)
+    editor.setState(createEditorState(result));
   });
+
+  await Promise.allSettled([setSelectedThemePromise, loadCustomCssPromise]);
 
   // Handle theme selection
   themeSelector?.addEventListener("change", function () {
@@ -486,4 +493,24 @@ document.getElementById("file-export-btn")!.addEventListener("click", () => {
   }
   const defaultFilename = generateDefaultFilename();
   saveCSSToFile(css, defaultFilename);
+});
+
+chrome.storage.onChanged.addListener(async (changes, namespace) => {
+  console.log("storage", changes, namespace);
+  if(Object.hasOwn(changes, "customCSS")) {
+    if (saveCount == 0) {
+      await loadCustomCSS().then(result => {
+        console.log("Got a CSS Update")
+        editor.setState(createEditorState(result));
+      });
+    }
+    saveCount = Math.max(saveCount - 1, 0);
+
+
+  }
+
+  if(Object.hasOwn(changes, "themeName")) {
+    console.log("Got a Theme Name Update");
+    await setThemeName();
+  }
 });
