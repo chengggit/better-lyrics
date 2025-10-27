@@ -590,9 +590,8 @@ function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible = false
               breakElm.style.order = "4";
               lyricElement.appendChild(breakElm);
 
-
               romanizedLine.textContent = result ? "\n" + result : "\n";
-              romanizedLine.style.order = "5"
+              romanizedLine.style.order = "5";
               lyricElement.appendChild(romanizedLine);
               DOM.lyricsElementAdded();
             }
@@ -627,7 +626,7 @@ function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible = false
                 lyricElement.appendChild(breakElm);
               }
               translatedLine.textContent = "\n" + result.translatedText;
-              translatedLine.style.order = "7"
+              translatedLine.style.order = "7";
               lyricElement.appendChild(translatedLine);
 
               DOM.lyricsElementAdded();
