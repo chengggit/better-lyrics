@@ -99,8 +99,9 @@ export default async function bLyrics(providerParameters: ProviderParameters): P
                         isBackground,
                         words: spanText,
                     })
-
                     text += spanText;
+
+                    isWordSynced = true;
                 }
             }
         })
@@ -108,10 +109,8 @@ export default async function bLyrics(providerParameters: ProviderParameters): P
         let beginTimeMs = parseTime(meta["@_begin"]);
         let endTimeMs = parseTime(meta["@_end"]);
 
-        if (parts.length <= 1) {
+        if (!isWordSynced) {
             parts = [];
-        } else {
-            isWordSynced = true;
         }
 
         lyrics.push({
