@@ -47,7 +47,7 @@ interface ParagraphAttributes {
   "@_role": string;
 }
 
-export interface BackgroundSpanElement {
+export interface SpanElement {
   "#text"?: string;
   span?: LyricSpan[];
   ":@": ParagraphAttributes;
@@ -58,10 +58,10 @@ export interface BackgroundSpanElement {
  * For line-synced lyrics, it will have a top-level "#text" property.
  * For word-synced lyrics, it will have a "span" array property.
  *
- * If the attribute @_role === x-bg this is a background lyric. span will be a BackgroundSpanElement
+ * If the attribute @_role === x-bg this is a background lyric. span will be a SpanElement instead of a LyricSpan
  */
-export type ParagraphElementOrBackground = BackgroundSpanElement & {
-  span?: BackgroundSpanElement[]; // Used for word-synced lyrics.
+export type ParagraphElementOrBackground = SpanElement & {
+  span?: SpanElement[]; // Used for word-synced lyrics.
 };
 
 /**
@@ -77,7 +77,7 @@ interface DivAttributes {
 /**
  * Represents a <div> element, which contains paragraphs.
  */
-interface DivElement {
+export interface DivElement {
   p: ParagraphElementOrBackground[];
   ":@": DivAttributes;
 }
@@ -131,7 +131,7 @@ interface TranslationContainer {
  * Represents a single <transliteration> item.
  */
 interface TransliterationItem {
-  text: MetadataTextContainer[];
+  text: ParagraphElementOrBackground[];
   ":@": {
     "@_for": string;
   };
@@ -152,7 +152,7 @@ interface TransliterationContainer {
  */
 interface ITunesMetadata {
   // Set to `any[]` or this structure, as one example showed `Array<any>`
-  translations?: (TranslationContainer | any)[];
+  translations?: (TranslationContainer)[];
   songwriters?: SongwriterContainer[];
   transliterations?: TransliterationContainer[]; // Optional
 }

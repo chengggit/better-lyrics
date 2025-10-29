@@ -611,6 +611,14 @@
 	margin-top: 8px;
 }
 
+.blyrics--romanized > span {
+	white-space: pre-wrap;
+}
+
+.blyrics--romanized > span > span {
+	white-space: nowrap;
+}
+
 /* Romanization */
 .blyrics--romanized {
 	/* font-style: italic; */

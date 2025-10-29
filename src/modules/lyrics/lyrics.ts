@@ -20,6 +20,7 @@ import type { LyricSourceResult, ProviderParameters } from "./providers/shared";
 import type { CubeyLyricSourceResult } from "./providers/cubey";
 import type { YTLyricSourceResult } from "./providers/yt";
 import { BACKGROUND_LYRIC_CLASS } from "@constants";
+import {it} from "node:test";
 
 /** Current version of the lyrics cache format */
 const LYRIC_CACHE_VERSION = "1.2.0";
@@ -530,48 +531,7 @@ function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible = false
       });
     }
 
-    // Take elements from the buffer and group them together to control where wrapping happens
-    const breakChar = /([\s\u200B\u00AD\p{Dash_Punctuation}])/gu;
-
-    let wordGroupBuffer = [] as HTMLSpanElement[];
-    let isCurrentBufferBg = false;
-
-    let pushWordGroupBuffer = () => {
-      if (wordGroupBuffer.length > 0) {
-        let span = document.createElement("span");
-        wordGroupBuffer.forEach(word => {
-          span.appendChild(word);
-        });
-
-        if (wordGroupBuffer[0].classList.contains(BACKGROUND_LYRIC_CLASS)) {
-          span.classList.add(BACKGROUND_LYRIC_CLASS);
-        }
-
-        lyricElement.appendChild(span);
-        wordGroupBuffer = [];
-      }
-    };
-
-    lyricElementsBuffer.forEach(part => {
-      const isNonMatchingType = isCurrentBufferBg !== part.classList.contains(BACKGROUND_LYRIC_CLASS);
-      if (!isNonMatchingType) {
-        wordGroupBuffer.push(part);
-      }
-      if (
-        (part.textContent.length > 0 && breakChar.test(part.textContent[part.textContent.length - 1])) ||
-        isNonMatchingType
-      ) {
-        pushWordGroupBuffer();
-      }
-
-      if (isNonMatchingType) {
-        wordGroupBuffer.push(part);
-        isCurrentBufferBg = part.classList.contains(BACKGROUND_LYRIC_CLASS);
-      }
-    });
-
-    //add remaining
-    pushWordGroupBuffer();
+    groupByWordAndInsert(lyricElement, lyricElementsBuffer);
 
     //Makes bg lyrics go to the next line
     let breakElm: HTMLSpanElement = document.createElement("span");
@@ -597,7 +557,8 @@ function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible = false
     }
 
     // Synchronously check cache and inject if found
-    const romanizedResult = Translation.getRomanizationFromCache(item.words);
+    let romanizedResult = Translation.getRomanizationFromCache(item.words);
+
     if (romanizedResult) {
       let breakElm: HTMLSpanElement = document.createElement("span");
       breakElm.classList.add("blyrics--break");
@@ -612,7 +573,7 @@ function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible = false
       lyricElement.dataset.romanized = "true";
     }
 
-    const translatedResult = Translation.getTranslationFromCache(
+    let translatedResult = Translation.getTranslationFromCache(
       item.words,
       Translation.getCurrentTranslationLanguage()
     );
@@ -636,6 +597,53 @@ function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible = false
         let romanizedLine = document.createElement("div");
         romanizedLine.classList.add(Constants.ROMANIZED_LYRICS_CLASS);
 
+        if (item.timedRomanization) {
+
+          let lyricElementsBuffer = [] as HTMLSpanElement[];
+
+          item.timedRomanization.forEach(part => {
+            let span = document.createElement("span");
+            span.classList.add(Constants.WORD_CLASS);
+            if (Number(part.durationMs) === 0) {
+              span.classList.add(Constants.ZERO_DURATION_ANIMATION_CLASS);
+            }
+
+            let partData: PartData = {
+              time: part.startTimeMs / 1000,
+              duration: part.durationMs / 1000,
+              lyricElement: span,
+              animationStartTimeMs: Infinity,
+            };
+
+            span.textContent = part.words;
+            span.dataset.time = String(partData.time);
+            span.dataset.duration = String(partData.duration);
+            span.dataset.content = part.words;
+            span.style.setProperty("--blyrics-duration", part.durationMs + "ms");
+            if (part.isBackground) {
+              span.classList.add(BACKGROUND_LYRIC_CLASS);
+            }
+            if (part.words.trim().length === 0) {
+              span.style.display = "inline";
+            }
+            line.parts.push(partData);
+
+            lyricElementsBuffer.push(span);
+          });
+
+          groupByWordAndInsert(romanizedLine, lyricElementsBuffer);
+
+          let breakElm: HTMLSpanElement = document.createElement("span");
+          breakElm.classList.add("blyrics--break");
+          breakElm.style.order = "4";
+          lyricElement.appendChild(breakElm);
+
+          romanizedLine.style.order = "5";
+          lyricElement.appendChild(romanizedLine);
+          DOM.lyricsElementAdded();
+          return;
+        }
+
         let isNonLatin = containsNonLatin(item.words);
         if (Constants.romanizationLanguages.includes(source_language) || containsNonLatin(item.words)) {
           let usableLang = source_language;
@@ -643,7 +651,13 @@ function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible = false
             usableLang = "auto";
           }
           if (item.words.trim() !== "♪" && item.words.trim() !== "") {
-            const result = await Translation.translateTextIntoRomaji(usableLang, item.words);
+            let result;
+            if (item.romanization) {
+              result = item.romanization;
+            } else {
+              result = await Translation.translateTextIntoRomaji(usableLang, item.words);
+            }
+
             if (result) {
               let breakElm: HTMLSpanElement = document.createElement("span");
               breakElm.classList.add("blyrics--break");
@@ -672,7 +686,15 @@ function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible = false
 
         if (source_language !== target_language || containsNonLatin(item.words)) {
           if (item.words.trim() !== "♪" && item.words.trim() !== "") {
-            const result = await Translation.translateText(item.words, target_language);
+            let result;
+            if (item.translation && target_language === item.translation.lang) {
+              result = {
+                originalLanguage: item.translation.lang,
+                translatedText: item.translation.text,
+              }
+            } else {
+              result = await Translation.translateText(item.words, target_language);
+            }
 
             if (result) {
               // Remove existing translated line if language changed
@@ -738,6 +760,56 @@ function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible = false
   };
 
   AppState.areLyricsLoaded = true;
+}
+
+
+/**
+ * Take elements from the buffer and group them together to control where wrapping happens
+ * @param lyricElement element to push to
+ * @param lyricElementsBuffer elements to add
+ */
+function groupByWordAndInsert(lyricElement: HTMLDivElement, lyricElementsBuffer: HTMLSpanElement[]) {
+  const breakChar = /([\s\u200B\u00AD\p{Dash_Punctuation}])/gu;
+
+  let wordGroupBuffer = [] as HTMLSpanElement[];
+  let isCurrentBufferBg = false;
+
+  let pushWordGroupBuffer = () => {
+    if (wordGroupBuffer.length > 0) {
+      let span = document.createElement("span");
+      wordGroupBuffer.forEach(word => {
+        span.appendChild(word);
+      });
+
+      if (wordGroupBuffer[0].classList.contains(BACKGROUND_LYRIC_CLASS)) {
+        span.classList.add(BACKGROUND_LYRIC_CLASS);
+      }
+
+      lyricElement.appendChild(span);
+      wordGroupBuffer = [];
+    }
+  };
+
+  lyricElementsBuffer.forEach(part => {
+    const isNonMatchingType = isCurrentBufferBg !== part.classList.contains(BACKGROUND_LYRIC_CLASS);
+    if (!isNonMatchingType) {
+      wordGroupBuffer.push(part);
+    }
+    if (
+        (part.textContent.length > 0 && breakChar.test(part.textContent[part.textContent.length - 1])) ||
+        isNonMatchingType
+    ) {
+      pushWordGroupBuffer();
+    }
+
+    if (isNonMatchingType) {
+      wordGroupBuffer.push(part);
+      isCurrentBufferBg = part.classList.contains(BACKGROUND_LYRIC_CLASS);
+    }
+  });
+
+  //add remaining
+  pushWordGroupBuffer();
 }
 
 /**
