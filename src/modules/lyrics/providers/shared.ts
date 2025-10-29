@@ -3,7 +3,7 @@ import * as Constants from "@constants";
 import ytLyrics, { type YTLyricSourceResult } from "./yt";
 import cubey, { type CubeyLyricSourceResult } from "./cubey";
 import lyricLib from "./lrclib";
-import bLyrics from "./blyrics";
+import bLyrics from "./blyrics/blyrics";
 import { ytCaptions } from "./ytCaptions";
 
 interface AudioTrackData {
@@ -60,6 +60,9 @@ export interface Lyric {
   durationMs: number;
   parts?: LyricPart[];
   agent?: string;
+  translation?: string;
+  romanization?: string;
+  timedRomanization?: LyricPart[];
 }
 
 export interface LyricPart {
