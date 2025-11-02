@@ -11,7 +11,7 @@ Better Lyrics upgrades your YouTube Music experience by providing beautiful time
  <img src="https://img.shields.io/badge/version-2.0.4-blue.svg" alt=""/>
 
  <img src="https://img.shields.io/badge/status-active-brightgreen.svg" alt=""/>
- <a aria-label="Volkswagen CI" href="https://github.com/boidushya/better-lyrics"><img src="https://auchenberg.github.io/volkswagen/volkswargen_ci.svg?v=1" alt=""/></a>
+ <a aria-label="Volkswagen CI" href="https://github.com/better-lyrics/better-lyrics"><img src="https://auchenberg.github.io/volkswagen/volkswargen_ci.svg?v=1" alt=""/></a>
  <a aria-label="Better Stack Badge" href="https://better-lyrics-status.boidu.dev"><img height="20" src="https://uptime.betterstack.com/status-badges/v2/monitor/1dqoz.svg" alt="Better Stack Badge" /></a>
 
  <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
@@ -109,7 +109,7 @@ Custom styling for lyrics is available from Better Lyrics v1.7.0 onwards. This a
 
 | Permission                                                            | Reason                                                                                                                                                                                       | Data Usage                                         |
 | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| **Download files and read and modify the browser's download history** | [Firefox specific - Required to download styles and themes as CSS file](https://github.com/boidushya/better-lyrics/blob/b9d5f888703f1b786e48a4fe66bfec08a1553739/src/options/editor.js#L159) | Does not read or modify browser's download history |
+| **Download files and read and modify the browser's download history** | [Firefox specific - Required to download styles and themes as CSS file](https://github.com/better-lyrics/better-lyrics/blob/b9d5f888703f1b786e48a4fe66bfec08a1553739/src/options/editor.js#L159) | Does not read or modify browser's download history |
 
 Better Lyrics **does not** collect any personal data or track your browsing activity. The extension is open-source and thoroughly reviewed by the community to ensure that your privacy is protected.
 
@@ -117,7 +117,7 @@ Better Lyrics **does not** collect any personal data or track your browsing acti
 
 ### Chrome
 
-1. Clone this repository or download the ZIP file from [releases](https://github.com/boidushya/better-lyrics/releases) page.
+1. Clone this repository or download the ZIP file from [releases](https://github.com/better-lyrics/better-lyrics/releases) page.
 2. Open Google Chrome and go to `chrome://extensions`.
 3. Enable "Developer mode" by toggling the switch in top right corner.
 4. Click on "Load unpacked" and select the folder where you cloned/downloaded this repository.
@@ -125,7 +125,7 @@ Better Lyrics **does not** collect any personal data or track your browsing acti
 
 ### Firefox
 
-1. Clone this repository or download the ZIP file from [releases](https://github.com/boidushya/better-lyrics/releases) page.
+1. Clone this repository or download the ZIP file from [releases](https://github.com/better-lyrics/better-lyrics/releases) page.
 2. Open Firefox and go to `about:debugging#/runtime/this-firefox`.
 3. Copy the contents of `manifest.firefox.json` and paste it in `manifest.json`.
 4. Click on "Load Temporary Add-on" and select the `manifest.json` file in the cloned/downloaded folder.
@@ -178,7 +178,7 @@ This helps improve the lyrics database for all Better Lyrics users who use the L
 
 ### How do I report a bug?
 
-[Open an issue here](https://github.com/boidushya/better-lyrics/issues/new/choose) with as much detail as possible. Alternatively, join our [Discord community](https://discord.gg/UsHE3d5fWF) and report it under `#bug-reports`.
+[Open an issue here](https://github.com/better-lyrics/better-lyrics/issues/new/choose) with as much detail as possible. Alternatively, join our [Discord community](https://discord.gg/UsHE3d5fWF) and report it under `#bug-reports`.
 
 ### I don't like the new update. Can I revert to an old version?
 
@@ -196,7 +196,7 @@ No. Better Lyrics will always be free and open-source for everyone.
 
 ### Can I use Better Lyrics with other extensions?
 
-Yes, Better Lyrics should work with most extensions. If you encounter issues, report them under `#bug-reports` in our [Discord Server](https://discord.gg/UsHE3d5fWF) or [open an issue here](https://github.com/boidushya/better-lyrics/issues/new/choose).
+Yes, Better Lyrics should work with most extensions. If you encounter issues, report them under `#bug-reports` in our [Discord Server](https://discord.gg/UsHE3d5fWF) or [open an issue here](https://github.com/better-lyrics/better-lyrics/issues/new/choose).
 
 ### Can I use Better Lyrics on mobile?
 
@@ -230,7 +230,7 @@ No, Better Lyrics is specifically designed for YouTube Music. If you want someth
 >
 > Your support helps cover the costs of hosting and development, and ensures continued improvements and stability.
 
-<a href="https://drips.network/app/projects/github/boidushya/better-lyrics" target="_blank"><img src="https://www.drips.network/api/embed/project/https%3A%2F%2Fgithub.com%2Fboidushya%2Fbetter-lyrics/support.png?background=light&style=drips&text=project&stat=support" alt="Support better-lyrics on drips.network" height="32"></a>
+<a href="https://drips.network/app/projects/github/better-lyrics/better-lyrics" target="_blank"><img src="https://www.drips.network/api/embed/project/https%3A%2F%2Fgithub.com%2Fbetter-lyrics%2Fbetter-lyrics/support.png?background=light&style=drips&text=project&stat=support" alt="Support better-lyrics on drips.network" height="32"></a>
 
 [![Github Sponsors](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23F20C33)](https://github.com/sponsors/boidushya)
 
@@ -268,14 +268,14 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <table>
   <tbody>
     <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ZeDarkAdam"><img src="https://avatars.githubusercontent.com/u/80891624?v=4?s=100" width="100px;" alt="Oleh"/><br /><sub><b>Oleh</b></sub></a><br /><a href="https://github.com/boidushya/better-lyrics/commits?author=ZeDarkAdam" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://vinay-portfolioo.netlify.app/"><img src="https://avatars.githubusercontent.com/u/92705023?v=4?s=100" width="100px;" alt="VINAY CHAURASIYA"/><br /><sub><b>VINAY CHAURASIYA</b></sub></a><br /><a href="https://github.com/boidushya/better-lyrics/commits?author=VinayChaurasiyaA" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Myse1f"><img src="https://avatars.githubusercontent.com/u/28757057?v=4?s=100" width="100px;" alt="Yvon"/><br /><sub><b>Yvon</b></sub></a><br /><a href="https://github.com/boidushya/better-lyrics/commits?author=Myse1f" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/nitinmano"><img src="https://avatars.githubusercontent.com/u/55648552?v=4?s=100" width="100px;" alt="NMPro"/><br /><sub><b>NMPro</b></sub></a><br /><a href="https://github.com/boidushya/better-lyrics/commits?author=nitinmano" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/adaliea"><img src="https://avatars.githubusercontent.com/u/59785640?v=4?s=100" width="100px;" alt="Adalie Ahuja"/><br /><sub><b>Adalie Ahuja</b></sub></a><br /><a href="https://github.com/boidushya/better-lyrics/commits?author=adaliea" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://gustavostz.com/"><img src="https://avatars.githubusercontent.com/u/48111506?v=4?s=100" width="100px;" alt="Gustavo Steinmetz"/><br /><sub><b>Gustavo Steinmetz</b></sub></a><br /><a href="https://github.com/boidushya/better-lyrics/commits?author=gustavostz" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Kiroolos"><img src="https://avatars.githubusercontent.com/u/43939903?v=4?s=100" width="100px;" alt="Kirolos ☃️"/><br /><sub><b>Kirolos ☃️</b></sub></a><br /><a href="https://github.com/boidushya/better-lyrics/commits?author=Kiroolos" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/cschot"><img src="https://avatars.githubusercontent.com/u/40297097?v=4?s=100" width="100px;" alt="cschot"/><br /><sub><b>cschot</b></sub></a><br /><a href="https://github.com/boidushya/better-lyrics/commits?author=cschot" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ZeDarkAdam"><img src="https://avatars.githubusercontent.com/u/80891624?v=4?s=100" width="100px;" alt="Oleh"/><br /><sub><b>Oleh</b></sub></a><br /><a href="https://github.com/better-lyrics/better-lyrics/commits?author=ZeDarkAdam" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://vinay-portfolioo.netlify.app/"><img src="https://avatars.githubusercontent.com/u/92705023?v=4?s=100" width="100px;" alt="VINAY CHAURASIYA"/><br /><sub><b>VINAY CHAURASIYA</b></sub></a><br /><a href="https://github.com/better-lyrics/better-lyrics/commits?author=VinayChaurasiyaA" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Myse1f"><img src="https://avatars.githubusercontent.com/u/28757057?v=4?s=100" width="100px;" alt="Yvon"/><br /><sub><b>Yvon</b></sub></a><br /><a href="https://github.com/better-lyrics/better-lyrics/commits?author=Myse1f" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/nitinmano"><img src="https://avatars.githubusercontent.com/u/55648552?v=4?s=100" width="100px;" alt="NMPro"/><br /><sub><b>NMPro</b></sub></a><br /><a href="https://github.com/better-lyrics/better-lyrics/commits?author=nitinmano" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/adaliea"><img src="https://avatars.githubusercontent.com/u/59785640?v=4?s=100" width="100px;" alt="Adalie Ahuja"/><br /><sub><b>Adalie Ahuja</b></sub></a><br /><a href="https://github.com/better-lyrics/better-lyrics/commits?author=adaliea" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://gustavostz.com/"><img src="https://avatars.githubusercontent.com/u/48111506?v=4?s=100" width="100px;" alt="Gustavo Steinmetz"/><br /><sub><b>Gustavo Steinmetz</b></sub></a><br /><a href="https://github.com/better-lyrics/better-lyrics/commits?author=gustavostz" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Kiroolos"><img src="https://avatars.githubusercontent.com/u/43939903?v=4?s=100" width="100px;" alt="Kirolos ☃️"/><br /><sub><b>Kirolos ☃️</b></sub></a><br /><a href="https://github.com/better-lyrics/better-lyrics/commits?author=Kiroolos" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/cschot"><img src="https://avatars.githubusercontent.com/u/40297097?v=4?s=100" width="100px;" alt="cschot"/><br /><sub><b>cschot</b></sub></a><br /><a href="https://github.com/better-lyrics/better-lyrics/commits?author=cschot" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

@@ -16,7 +16,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/boidushya/better-lyrics.git"
+        "url": "git+https://github.com/better-lyrics/better-lyrics.git"
     },
     "keywords": [
         "youtube-music",
@@ -26,9 +26,9 @@
     "author": "boidushya",
     "license": "GPL-3.0",
     "bugs": {
-        "url": "https://github.com/boidushya/better-lyrics/issues"
+        "url": "https://github.com/better-lyrics/better-lyrics/issues"
     },
-    "homepage": "https://github.com/boidushya/better-lyrics#readme",
+    "homepage": "https://github.com/better-lyrics/better-lyrics#readme",
     "dependencies": {
         "@codemirror/basic-setup": "^0.20.0",
         "@codemirror/commands": "^6.9.0",

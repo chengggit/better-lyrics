@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         > [!NOTE]
-        > Please search the [FAQ](https://github.com/boidushya/better-lyrics/tree/master?tab=readme-ov-file#faq) & [Roadmap](https://github.com/boidushya/better-lyrics/issues/4) to avoid duplicates. If you find a similar feature request, please upvote it and add a comment with additional information.
+        > Please search the [FAQ](https://github.com/better-lyrics/better-lyrics/tree/master?tab=readme-ov-file#faq) & [Roadmap](https://github.com/better-lyrics/better-lyrics/issues/4) to avoid duplicates. If you find a similar feature request, please upvote it and add a comment with additional information.
 
   - type: textarea
     id: summary
