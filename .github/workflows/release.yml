@@ -88,7 +88,7 @@ jobs:
           CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
           REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
-        run: tsx scripts/publish-chrome.ts
+        run: tsx tooling/publish-chrome.ts
 
   publish-firefox:
     needs: release
@@ -108,7 +108,7 @@ jobs:
         env:
           FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
           FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
-        run: tsx scripts/publish-firefox.ts
+        run: tsx tooling/publish-firefox.ts
 
   publish-edge:
     needs: release
@@ -129,4 +129,4 @@ jobs:
           CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
           API_KEY: ${{ secrets.EDGE_API_KEY }}
           PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
-        run: tsx scripts/publish-edge.ts
+        run: tsx tooling/publish-edge.ts
