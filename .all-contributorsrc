@@ -78,6 +78,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "ramansg",
+      "name": "ramansg",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19746632?v=4",
+      "profile": "https://github.com/ramansg",
+      "contributions": [
+        "plugin"
+      ]
     }
   ],
   "badgeTemplate": "<img src=\"https://img.shields.io/badge/all_contributors-<%= contributors.length %>-orange.svg\" alt=\"\"/>",
@@ -86,5 +95,5 @@
   "repoType": "github",
   "repoHost": "https://github.com",
   "projectName": "better-lyrics",
-  "projectOwner": "boidushya"
+  "projectOwner": "better-lyrics"
 }
