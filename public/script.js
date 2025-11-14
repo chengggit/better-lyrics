@@ -9,6 +9,18 @@
  */
 let tickLyricsInterval;
 
+/**
+ * Last recorded player time to detect changes.
+ * @type {number}
+ */
+let lastPlayerTime = 0;
+
+/**
+ * Last recorded player timestamp to interpolate time.
+ * @type {number}
+ */
+let lastPlayerTimestamp = 0;
+
 // Get all player methods (paste in broswer console)
 // for(i in document.getElementById("movie_player")) {
 //     if (typeof document.getElementById("movie_player")[i] === 'function' && i.includes("get")) {
@@ -29,7 +41,13 @@ const startLyricsTick = () => {
     const player = document.getElementById("movie_player");
     if (player) {
       try {
+        if (lastPlayerTimestamp === 0) 
+          lastPlayerTimestamp = Date.now() / 1000;
+
+        const now = Date.now() / 1000;
+        const timeDiff = (now - lastPlayerTimestamp);
         const currentTime = player.getCurrentTime();
+        const time = currentTime === lastPlayerTime ? currentTime + timeDiff : currentTime;
         const { video_id, title, author } = player.getVideoData();
         const audioTrackData = player.getAudioTrack();
         const duration = player.getDuration();
@@ -38,7 +56,7 @@ const startLyricsTick = () => {
         document.dispatchEvent(
           new CustomEvent("blyrics-send-player-time", {
             detail: {
-              currentTime: currentTime,
+              currentTime: time,
               videoId: video_id,
               song: title,
               artist: author,
@@ -50,6 +68,11 @@ const startLyricsTick = () => {
             },
           })
         );
+
+        if (currentTime !== lastPlayerTime) {
+          lastPlayerTime = currentTime;
+          lastPlayerTimestamp = now;
+        }
       } catch (e) {
         console.log(e);
         stopLyricsTick();
