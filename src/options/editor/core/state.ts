@@ -1,6 +1,4 @@
 import type { EditorView } from "@codemirror/view";
-import { EditorSelection } from "@codemirror/state";
-import { createEditorState } from "./editor";
 
 type OperationType = "import" | "theme" | "storage" | "init";
 
@@ -125,7 +123,7 @@ export class EditorStateManager {
   }
 
   async queueOperation(type: OperationType, execute: () => Promise<void>): Promise<void> {
-    const id = `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const id = `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
     console.log(`[EditorStateManager] Queuing operation: ${type} (${id})`);
 
     return new Promise((resolve, reject) => {
@@ -151,22 +149,21 @@ export class EditorStateManager {
       throw new Error("[EditorStateManager] Editor not initialized");
     }
 
+    const currentContent = this.editor.state.doc.toString();
+
+    if (currentContent === css) {
+      console.log(`[EditorStateManager] Content unchanged from: ${source}, skipping update`);
+      return;
+    }
+
     console.log(`[EditorStateManager] Setting editor content from: ${source} (${css.length} bytes)`);
 
-    const currentSelection = this.editor.state.selection;
-    const currentAnchor = currentSelection.main.anchor;
-    const currentHead = currentSelection.main.head;
-
-    const newState = createEditorState(css);
-    const maxPos = newState.doc.length;
-
-    const clampedAnchor = Math.min(currentAnchor, maxPos);
-    const clampedHead = Math.min(currentHead, maxPos);
-
-    this.editor.setState(newState);
-
     this.editor.dispatch({
-      selection: EditorSelection.create([EditorSelection.range(clampedAnchor, clampedHead)]),
+      changes: {
+        from: 0,
+        to: this.editor.state.doc.length,
+        insert: css
+      },
     });
 
     console.log(`[EditorStateManager] Editor content set successfully from: ${source}`);
