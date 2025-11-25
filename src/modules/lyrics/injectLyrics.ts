@@ -320,9 +320,7 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
 
     let currentTranslationLang = Translation.getCurrentTranslationLanguage();
 
-    if (item.translation &&
-        langCodesMatch(currentTranslationLang, item.translation.lang)
-    ) {
+    if (item.translation && langCodesMatch(currentTranslationLang, item.translation.lang)) {
       translationResult = {
         originalLanguage: item.translation.lang,
         translatedText: item.translation.text,
@@ -485,8 +483,14 @@ function groupByWordAndInsert(lyricElement: HTMLDivElement, lyricElementsBuffer:
  * @param str2
  */
 function isSameText(str1: string, str2: string): boolean {
-  str1 = str1.toLowerCase().replaceAll(/(\p{P})/ug, "").trim();
-  str2 = str2.toLowerCase().replaceAll(/(\p{P})/ug, "").trim();
+  str1 = str1
+    .toLowerCase()
+    .replaceAll(/(\p{P})/gu, "")
+    .trim();
+  str2 = str2
+    .toLowerCase()
+    .replaceAll(/(\p{P})/gu, "")
+    .trim();
 
   return str1 === str2;
 }
@@ -495,7 +499,7 @@ function isSameText(str1: string, str2: string): boolean {
  * Compare base language codes, e.g. "en" matches "en-US"
  */
 function langCodesMatch(lang1: string, lang2: string): boolean {
-  const base1 = lang1.split('-')[0];
-  const base2 = lang2.split('-')[0];
+  const base1 = lang1.split("-")[0];
+  const base2 = lang2.split("-")[0];
   return base1 === base2;
 }
