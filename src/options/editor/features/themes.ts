@@ -145,7 +145,6 @@ export function hideThemeName(): void {
 
 export function onChange(_state: string) {
   if (editorStateManager.getIsProgrammaticChange()) {
-    debounceSave();
     return;
   }
 
