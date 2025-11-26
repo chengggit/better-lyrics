@@ -1,8 +1,8 @@
 import { getStorage } from "./storage";
-import {cachedDurations, cachedProperties} from "@modules/ui/animationEngine";
-import {AppState} from "@/index";
-import * as App from "@/index"
-import {DEFAULT_LINE_SYNCED_WORD_DELAY_MS} from "@constants";
+import { cachedDurations, cachedProperties } from "@modules/ui/animationEngine";
+import { AppState } from "@/index";
+import * as App from "@/index";
+import { DEFAULT_LINE_SYNCED_WORD_DELAY_MS } from "@constants";
 
 /**
  * Conditionally logs messages based on the isLogsEnabled setting.
@@ -58,7 +58,9 @@ export function applyCustomCSS(css: string): void {
     AppState.animationSettings.disableRichSynchronization = disableRichSync;
   }
 
-  let lineSyncedAnimationDelayMs = Number(config.get("blyrics-line-synced-animation-delay") || DEFAULT_LINE_SYNCED_WORD_DELAY_MS);
+  let lineSyncedAnimationDelayMs = Number(
+    config.get("blyrics-line-synced-animation-delay") || DEFAULT_LINE_SYNCED_WORD_DELAY_MS
+  );
   if (lineSyncedAnimationDelayMs !== AppState.animationSettings.lineSyncedWordDelayMs) {
     needsLyricReload = true;
     AppState.animationSettings.lineSyncedWordDelayMs = lineSyncedAnimationDelayMs;
@@ -67,7 +69,6 @@ export function applyCustomCSS(css: string): void {
   if (needsLyricReload) {
     App.reloadLyrics();
   }
-
 
   let styleTag = document.getElementById("blyrics-custom-style");
   if (styleTag) {
@@ -85,9 +86,9 @@ export function applyCustomCSS(css: string): void {
 /**
  * Parses 'blyrics' configuration options strictly from CSS comments.
  * First extracts comments, then looks for: blyrics-key = value;
-* @param cssContent - The raw CSS string to parse
-* @returns A Map containing the parsed keys and their values (boolean or string)
-*/
+ * @param cssContent - The raw CSS string to parse
+ * @returns A Map containing the parsed keys and their values (boolean or string)
+ */
 function parseBlyricsConfig(cssContent: string): Map<string, string> {
   const configMap = new Map<string, string>();
 
@@ -114,7 +115,6 @@ function parseBlyricsConfig(cssContent: string): Map<string, string> {
 
   return configMap;
 }
-
 
 /**
  * Returns the position and dimensions of a child element relative to its parent.

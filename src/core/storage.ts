@@ -1,6 +1,6 @@
 import * as Utils from "@utils";
 import * as Constants from "@constants";
-import {cachedDurations, cachedProperties} from "@modules/ui/animationEngine";
+import { cachedDurations, cachedProperties } from "@modules/ui/animationEngine";
 
 async function decompressCSS(css: string): Promise<string> {
   if (!css.startsWith("__COMPRESSED__")) {

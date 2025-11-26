@@ -2,7 +2,7 @@ import { AppState } from "@/index";
 import * as Constants from "@constants";
 import * as Utils from "@utils";
 import { isLoaderActive } from "@modules/ui/dom";
-import {calculateLyricPositions, type LineData} from "@modules/lyrics/injectLyrics";
+import { calculateLyricPositions, type LineData } from "@modules/lyrics/injectLyrics";
 
 const MIRCO_SCROLL_THRESHOLD_S = 0.3;
 
@@ -216,7 +216,7 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
 
         if (!lineData.isAnimating) {
           const children = [lineData, ...lineData.parts];
-          children.forEach((part) => {
+          children.forEach(part => {
             const elDuration = part.duration;
             const elTime = part.time;
             const timeDelta = currentTime - elTime;
@@ -244,7 +244,7 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
           if (!isPlaying) {
             lineData.isSelected = false;
             const children = [lineData, ...lineData.parts];
-            children.forEach((part) => {
+            children.forEach(part => {
               if (part.animationStartTimeMs > now) {
                 part.lyricElement.classList.remove(Constants.ANIMATING_CLASS);
                 part.lyricElement.classList.remove(Constants.PRE_ANIMATING_CLASS);
@@ -255,7 +255,7 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
       } else {
         if (lineData.isSelected) {
           const children = [lineData, ...lineData.parts];
-          children.forEach((part) => {
+          children.forEach(part => {
             part.lyricElement.style.setProperty("--blyrics-swipe-delay", "");
             part.lyricElement.style.setProperty("--blyrics-anim-delay", "");
             part.lyricElement.classList.remove(Constants.ANIMATING_CLASS);
