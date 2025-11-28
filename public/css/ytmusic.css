@@ -325,3 +325,10 @@ ytmusic-player-page:not([is-mweb-modernization-enabled])[player-fullscreened]
   border-radius: 1000rem !important;
 }
 
+
+/* Clicking this button causes the fullscreen view to completly mess up. We're just hiding it for now */
+ytmusic-player-page[player-ui-state=MINIPLAYER]:not([video-mode])
+#song-media-window > div > yt-icon-button.fullscreen-button.style-scope.ytmusic-player {
+  display: none !important;
+}
+
