@@ -1,3 +1,4 @@
+import { openSearchPanel } from "@codemirror/search";
 import { showAlert } from "./ui/feedback";
 import {
   deleteThemeBtn,
@@ -31,6 +32,13 @@ export function initializeNavigation() {
     if ((e.ctrlKey || e.metaKey) && e.key === "s") {
       e.preventDefault();
       saveToStorage();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+      let view = editorStateManager.getEditor();
+      if (view) {
+        openSearchPanel(view);
+      }
+      e.preventDefault();
     }
   });
 }
@@ -114,10 +122,16 @@ export async function initializeEditor() {
 
   editorStateManager.setEditor(initialEditor);
 
-  document.getElementById("editor-popout-button")?.addEventListener("click", () => {
+  const openStandaloneEditor = () => {
     chrome.tabs.create({
       url: chrome.runtime.getURL("pages/standalone-editor.html"),
     });
+  };
+
+  document.getElementById("editor-popout-button")?.addEventListener("click", openStandaloneEditor);
+  document.getElementById("editor-popout-link")?.addEventListener("click", e => {
+    e.preventDefault();
+    openStandaloneEditor();
   });
 
   console.log("[BetterLyrics] Loading theme name and initial CSS");
