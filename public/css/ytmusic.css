@@ -192,7 +192,7 @@ ytmusic-player-page:not([is-mweb-modernization-enabled])[player-fullscreened]
   padding-top: 2rem;
 }
 
-ytmusic-player-page:not([is-mweb-modernization-enabled])
+ytmusic-player-page:not([is-mweb-modernization-enabled]):not([player-ui-state=MINIPLAYER])
 #player.ytmusic-player-page {
   position: relative;
   width: 100%;
@@ -200,6 +200,15 @@ ytmusic-player-page:not([is-mweb-modernization-enabled])
   display: flex;
   margin: auto auto;
   justify-content: center;
+}
+
+/*
+Keep album art small
+ */
+ytmusic-player-page:not([video-mode]):not([player-ui-state=MINIPLAYER]) #player.ytmusic-player-page {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 ytmusic-player-page:not([is-mweb-modernization-enabled]):not([video-mode])
@@ -238,14 +247,6 @@ ytmusic-player-page:not([is-mweb-modernization-enabled])[player-fullscreened]
   ytmusic-player-page:not([is-mweb-modernization-enabled])[player-fullscreened][video-mode]
   #side-panel {
     width: var(--blyrics-fullscreen-video-panel-size);
-  }
-
-  /* Keep album art small */
-  ytmusic-player-page:not([video-mode])
-  #player.ytmusic-player-page {
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
   }
 
   ytmusic-player-page[player-fullscreened]:not([video-mode])
@@ -322,5 +323,12 @@ ytmusic-player-page:not([is-mweb-modernization-enabled])[player-fullscreened]
 
 .ytmusic-av-toggle{
   border-radius: 1000rem !important;
+}
+
+
+/* Clicking this button causes the fullscreen view to completly mess up. We're just hiding it for now */
+ytmusic-player-page[player-ui-state=MINIPLAYER]:not([video-mode])
+#song-media-window > div > yt-icon-button.fullscreen-button.style-scope.ytmusic-player {
+  display: none !important;
 }
 
