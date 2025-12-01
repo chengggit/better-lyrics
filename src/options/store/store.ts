@@ -30,6 +30,7 @@ let currentSlideIndex = 0;
 let storeThemesCache: StoreTheme[] = [];
 let storeStatsCache: AllThemeStats = {};
 let userRatingsCache: Record<string, number> = {};
+let userInstallsCache: Record<string, boolean> = {};
 
 async function loadUserRatings(): Promise<void> {
   const { userThemeRatings } = await chrome.storage.local.get("userThemeRatings");
@@ -39,6 +40,16 @@ async function loadUserRatings(): Promise<void> {
 async function saveUserRating(themeId: string, rating: number): Promise<void> {
   userRatingsCache[themeId] = rating;
   await chrome.storage.local.set({ userThemeRatings: userRatingsCache });
+}
+
+async function loadUserInstalls(): Promise<void> {
+  const { userThemeInstalls } = await chrome.storage.local.get("userThemeInstalls");
+  userInstallsCache = userThemeInstalls || {};
+}
+
+async function markUserInstall(themeId: string): Promise<void> {
+  userInstallsCache[themeId] = true;
+  await chrome.storage.local.set({ userThemeInstalls: userInstallsCache });
 }
 
 interface FilterState {
@@ -295,6 +306,7 @@ export function initStoreUI(): void {
   setupKeyboardListeners();
 
   loadUserRatings();
+  loadUserInstalls();
   setTimeout(checkForThemeUpdates, 500);
 }
 
@@ -310,6 +322,7 @@ export async function initMarketplaceUI(): Promise<void> {
   setupPaginationListeners();
 
   await loadUserRatings();
+  await loadUserInstalls();
   await loadMarketplace();
 }
 
@@ -559,7 +572,6 @@ function setupThemeChangeListener(): void {
   });
 }
 
-
 async function applyFiltersToGrid(): Promise<void> {
   const grid = document.getElementById("store-modal-grid");
   if (!grid) return;
@@ -757,7 +769,6 @@ function setupUrlModalListeners(): void {
   });
 }
 
-
 function createStoreThemeCard(theme: StoreTheme, isInstalled: boolean, stats?: ThemeStats): HTMLElement {
   const card = document.createElement("div");
   card.className = "store-card";
@@ -889,17 +900,20 @@ async function handleThemeAction(theme: StoreTheme, button: HTMLButtonElement): 
       button.className = "store-card-btn store-card-btn-remove";
       button.textContent = "Remove";
       showAlert(`Installed ${theme.title}`, theme.title);
-      trackInstall(theme.id)
-        .then(result => {
-          if (result.success && result.data !== null) {
-            if (storeStatsCache[theme.id]) {
-              storeStatsCache[theme.id].installs = result.data;
-            } else {
-              storeStatsCache[theme.id] = { installs: result.data, rating: 0, ratingCount: 0 };
+      if (!userInstallsCache[theme.id]) {
+        trackInstall(theme.id)
+          .then(result => {
+            if (result.success && result.data !== null) {
+              markUserInstall(theme.id);
+              if (storeStatsCache[theme.id]) {
+                storeStatsCache[theme.id].installs = result.data;
+              } else {
+                storeStatsCache[theme.id] = { installs: result.data, rating: 0, ratingCount: 0 };
+              }
             }
-          }
-        })
-        .catch(() => {});
+          })
+          .catch(() => {});
+      }
     }
 
     updateYourThemesDropdown();
@@ -973,88 +987,95 @@ async function openDetailModal(theme: StoreTheme): Promise<void> {
       }
     });
 
+    let currentRating = existingUserRating || 0;
+
+    const updateStarDisplay = (rating: number, isHover = false) => {
+      starButtons.forEach((btn, i) => {
+        btn.classList.toggle("hover", isHover && i < rating);
+        btn.classList.toggle("active", !isHover && i < rating);
+      });
+    };
+
     if (existingUserRating) {
       ratingStatusEl.textContent = `You rated ${existingUserRating} star${existingUserRating > 1 ? "s" : ""}`;
       ratingStatusEl.className = "detail-rating-status";
-      ratingStarsEl.onmouseleave = null;
-      starButtons.forEach(btn => {
-        (btn as HTMLButtonElement).onmouseenter = null;
-        (btn as HTMLButtonElement).onclick = null;
-      });
     } else {
       ratingStatusEl.textContent = "";
       ratingStatusEl.className = "detail-rating-status";
+    }
 
-      ratingStarsEl.onmouseleave = () => {
-        starButtons.forEach(btn => btn.classList.remove("hover"));
+    ratingStarsEl.onmouseleave = () => {
+      updateStarDisplay(currentRating, false);
+    };
+
+    starButtons.forEach((btn, index) => {
+      const rating = index + 1;
+
+      (btn as HTMLButtonElement).onmouseenter = () => {
+        updateStarDisplay(rating, true);
       };
 
-      starButtons.forEach((btn, index) => {
-        const rating = index + 1;
+      (btn as HTMLButtonElement).onclick = async () => {
+        updateStarDisplay(rating, false);
+        currentRating = rating;
 
-        (btn as HTMLButtonElement).onmouseenter = () => {
-          starButtons.forEach((b, i) => {
-            b.classList.toggle("hover", i < rating);
-          });
-        };
+        ratingStatusEl.textContent = "Submitting...";
+        ratingStatusEl.className = "detail-rating-status";
 
-        (btn as HTMLButtonElement).onclick = async () => {
-          starButtons.forEach(b => b.classList.remove("active"));
-          starButtons.forEach((b, i) => {
-            b.classList.toggle("active", i < rating);
-          });
+        const { success, data: ratingData, error } = await submitRating(theme.id, rating);
+        if (success && ratingData) {
+          await saveUserRating(theme.id, rating);
+          ratingStatusEl.textContent = `You rated ${rating} star${rating > 1 ? "s" : ""}`;
+          ratingStatusEl.className = "detail-rating-status success";
 
-          ratingStatusEl.textContent = "Submitting...";
-          ratingStatusEl.className = "detail-rating-status";
-
-          const { success, data: ratingData, error } = await submitRating(theme.id, rating);
-          if (success && ratingData) {
-            await saveUserRating(theme.id, rating);
-            ratingStatusEl.textContent = `You rated ${rating} star${rating > 1 ? "s" : ""}`;
-            ratingStatusEl.className = "detail-rating-status success";
-
-            ratingStarsEl.onmouseleave = null;
-            starButtons.forEach(b => {
-              (b as HTMLButtonElement).onmouseenter = null;
-              (b as HTMLButtonElement).onclick = null;
-            });
-
-            if (storeStatsCache[theme.id]) {
-              storeStatsCache[theme.id].rating = ratingData.average;
-              storeStatsCache[theme.id].ratingCount = ratingData.count;
-            } else {
-              storeStatsCache[theme.id] = { installs: 0, rating: ratingData.average, ratingCount: ratingData.count };
-            }
-
-            if (statsEl) {
-              const existingRating = statsEl.querySelector(".detail-stat:nth-child(2)");
-              if (existingRating) {
-                existingRating.replaceChildren();
-                existingRating.appendChild(createStarIcon());
-                existingRating.appendChild(document.createTextNode(`${ratingData.average.toFixed(1)} (${ratingData.count})`));
-              } else {
-                const ratingStat = document.createElement("span");
-                ratingStat.className = "detail-stat";
-                ratingStat.appendChild(createStarIcon());
-                ratingStat.appendChild(document.createTextNode(`${ratingData.average.toFixed(1)} (${ratingData.count})`));
-                statsEl.appendChild(ratingStat);
-              }
-            }
+          if (storeStatsCache[theme.id]) {
+            storeStatsCache[theme.id].rating = ratingData.average;
+            storeStatsCache[theme.id].ratingCount = ratingData.count;
           } else {
-            ratingStatusEl.textContent = error || "Failed to submit rating";
-            ratingStatusEl.className = "detail-rating-status error";
+            storeStatsCache[theme.id] = { installs: 0, rating: ratingData.average, ratingCount: ratingData.count };
           }
-        };
-      });
-    }
+
+          if (statsEl) {
+            const existingRatingStat = statsEl.querySelector(".detail-stat:nth-child(2)");
+            if (existingRatingStat) {
+              existingRatingStat.replaceChildren();
+              existingRatingStat.appendChild(createStarIcon());
+              existingRatingStat.appendChild(
+                document.createTextNode(`${ratingData.average.toFixed(1)} (${ratingData.count})`)
+              );
+            } else {
+              const ratingStat = document.createElement("span");
+              ratingStat.className = "detail-stat";
+              ratingStat.appendChild(createStarIcon());
+              ratingStat.appendChild(document.createTextNode(`${ratingData.average.toFixed(1)} (${ratingData.count})`));
+              statsEl.appendChild(ratingStat);
+            }
+          }
+        } else {
+          ratingStatusEl.textContent = error || "Failed to submit rating";
+          ratingStatusEl.className = "detail-rating-status error";
+        }
+      };
+    });
   }
 
   const initialInstalled = await isThemeInstalled(theme.id);
 
   const ratingSectionEl2 = document.getElementById("detail-rating-section");
-  if (ratingSectionEl2) {
-    ratingSectionEl2.style.display = initialInstalled ? "" : "none";
-  }
+  const ratingStarButtons = ratingSectionEl2?.querySelectorAll(".detail-star") as
+    | NodeListOf<HTMLButtonElement>
+    | undefined;
+  const updateRatingEnabled = (enabled: boolean) => {
+    if (ratingSectionEl2) {
+      ratingSectionEl2.classList.toggle("disabled", !enabled);
+    }
+    if (ratingStarButtons) {
+      ratingStarButtons.forEach(btn => {
+        btn.disabled = !enabled;
+      });
+    }
+  };
+  updateRatingEnabled(initialInstalled);
 
   if (actionBtn) {
     actionBtn.className = `store-card-btn ${initialInstalled ? "store-card-btn-remove" : "store-card-btn-install"}`;
@@ -1068,22 +1089,27 @@ async function openDetailModal(theme: StoreTheme): Promise<void> {
           actionBtn.className = "store-card-btn store-card-btn-install";
           actionBtn.textContent = "Install";
           showAlert(`Removed ${theme.title}`, theme.title);
+          updateRatingEnabled(false);
         } else {
           await installTheme(theme);
           actionBtn.className = "store-card-btn store-card-btn-remove";
           actionBtn.textContent = "Remove";
           showAlert(`Installed ${theme.title}`, theme.title);
-          trackInstall(theme.id)
-            .then(result => {
-              if (result.success && result.data !== null) {
-                if (storeStatsCache[theme.id]) {
-                  storeStatsCache[theme.id].installs = result.data;
-                } else {
-                  storeStatsCache[theme.id] = { installs: result.data, rating: 0, ratingCount: 0 };
+          updateRatingEnabled(true);
+          if (!userInstallsCache[theme.id]) {
+            trackInstall(theme.id)
+              .then(result => {
+                if (result.success && result.data !== null) {
+                  markUserInstall(theme.id);
+                  if (storeStatsCache[theme.id]) {
+                    storeStatsCache[theme.id].installs = result.data;
+                  } else {
+                    storeStatsCache[theme.id] = { installs: result.data, rating: 0, ratingCount: 0 };
+                  }
                 }
-              }
-            })
-            .catch(() => {});
+              })
+              .catch(() => {});
+          }
         }
         updateYourThemesDropdown();
         await refreshStoreCards();
@@ -1324,7 +1350,15 @@ async function handleUrlInstall(): Promise<void> {
 
     const theme = await fetchFullTheme(repo, branch);
     await installTheme(theme);
-    trackInstall(theme.id).catch(() => {});
+    if (!userInstallsCache[theme.id]) {
+      trackInstall(theme.id)
+        .then(result => {
+          if (result.success) {
+            markUserInstall(theme.id);
+          }
+        })
+        .catch(() => {});
+    }
 
     const branchInfo = branch ? ` (${branch})` : "";
     showAlert(`Installed ${theme.title} from ${repo}${branchInfo}`, theme.title);
@@ -1470,7 +1504,6 @@ function resetFilters(): void {
   const compatibleCheckbox = document.getElementById("store-filter-compatible") as HTMLInputElement;
   if (compatibleCheckbox) compatibleCheckbox.checked = true;
 }
-
 
 async function refreshStoreCards(): Promise<void> {
   const installedThemes = await getInstalledStoreThemes();

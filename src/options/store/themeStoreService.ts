@@ -1,10 +1,4 @@
-import type {
-  ThemeStoreIndex,
-  StoreTheme,
-  StoreThemeMetadata,
-  ThemeValidationResult,
-  PermissionStatus,
-} from "./types";
+import type { ThemeStoreIndex, StoreTheme, StoreThemeMetadata, ThemeValidationResult, PermissionStatus } from "./types";
 
 const INDEX_REPO = "better-lyrics/themes";
 const DEFAULT_TIMEOUT_MS = 10000;
@@ -149,7 +143,10 @@ async function checkFileExists(url: string): Promise<boolean> {
   }
 }
 
-export async function fetchThemeShaderConfig(repo: string, branchOverride?: string): Promise<Record<string, unknown> | null> {
+export async function fetchThemeShaderConfig(
+  repo: string,
+  branchOverride?: string
+): Promise<Record<string, unknown> | null> {
   const branch = branchOverride ?? (await getDefaultBranch(repo));
   const url = getRawGitHubUrl(repo, branch, "shader.json");
 
@@ -284,9 +281,7 @@ export function parseGitHubRepoUrl(input: string): ParsedGitHubUrl | null {
   const trimmed = input.trim();
 
   // Match: github.com/user/repo/tree/branch-name (with optional nested paths like feature/foo)
-  const branchUrlMatch = trimmed.match(
-    /^(?:https?:\/\/)?(?:www\.)?github\.com\/([^/]+\/[^/]+)\/tree\/(.+?)\/?$/i
-  );
+  const branchUrlMatch = trimmed.match(/^(?:https?:\/\/)?(?:www\.)?github\.com\/([^/]+\/[^/]+)\/tree\/(.+?)\/?$/i);
   if (branchUrlMatch) {
     return {
       repo: branchUrlMatch[1],

@@ -8,7 +8,12 @@
  * @param {Object} [request.settings] - Settings object for updateSettings action
  * @returns {boolean} Returns true to indicate asynchronous response
  */
-import { getActiveStoreTheme, getInstalledStoreThemes, getInstalledTheme, performSilentUpdates } from "./store/themeStoreManager";
+import {
+  getActiveStoreTheme,
+  getInstalledStoreThemes,
+  getInstalledTheme,
+  performSilentUpdates,
+} from "./store/themeStoreManager";
 import { checkStorePermissions, fetchAllStoreThemes } from "./store/themeStoreService";
 
 const THEME_UPDATE_ALARM = "theme-update-check";
@@ -43,13 +48,15 @@ async function checkAndApplyThemeUpdates(): Promise<void> {
             });
           });
 
-          chrome.runtime.sendMessage({
-            action: "storeThemeUpdated",
-            themeId: activeThemeId,
-            css: formattedCSS,
-            title: updatedTheme.title,
-            version: updatedTheme.version,
-          }).catch(() => {});
+          chrome.runtime
+            .sendMessage({
+              action: "storeThemeUpdated",
+              themeId: activeThemeId,
+              css: formattedCSS,
+              title: updatedTheme.title,
+              version: updatedTheme.version,
+            })
+            .catch(() => {});
         }
       }
     }
@@ -59,7 +66,7 @@ async function checkAndApplyThemeUpdates(): Promise<void> {
 }
 
 function setupThemeUpdateAlarm(): void {
-  chrome.alarms.get(THEME_UPDATE_ALARM, (existingAlarm) => {
+  chrome.alarms.get(THEME_UPDATE_ALARM, existingAlarm => {
     if (!existingAlarm) {
       chrome.alarms.create(THEME_UPDATE_ALARM, {
         delayInMinutes: 1,
@@ -80,7 +87,7 @@ chrome.runtime.onStartup.addListener(() => {
   checkAndApplyThemeUpdates();
 });
 
-chrome.alarms.onAlarm.addListener((alarm) => {
+chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name === THEME_UPDATE_ALARM) {
     checkAndApplyThemeUpdates();
   }
@@ -95,7 +102,8 @@ chrome.runtime.onMessage.addListener(request => {
       tabs.forEach(tab => {
         if (tab.id != null) {
           console.log(`[BetterLyrics Background] Sending to tab ${tab.id}`);
-          chrome.tabs.sendMessage(tab.id, { action: "updateCSS", css: request.css })
+          chrome.tabs
+            .sendMessage(tab.id, { action: "updateCSS", css: request.css })
             .then(() => {
               console.log(`[BetterLyrics Background] Successfully sent to tab ${tab.id}`);
             })

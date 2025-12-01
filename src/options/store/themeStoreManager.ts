@@ -118,9 +118,7 @@ export async function installTheme(theme: StoreTheme): Promise<InstalledStoreThe
     await chrome.storage.local.set({ [getThemeStorageKey(theme.id)]: installedTheme });
   } catch (err) {
     if (err instanceof Error && err.message.includes("QUOTA")) {
-      throw new Error(
-        `Cannot install theme: storage is full. Please remove some installed themes and try again.`
-      );
+      throw new Error(`Cannot install theme: storage is full. Please remove some installed themes and try again.`);
     }
     throw err;
   }

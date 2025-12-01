@@ -364,7 +364,7 @@ export class StorageManager {
       }
     });
 
-    chrome.runtime.onMessage.addListener((request) => {
+    chrome.runtime.onMessage.addListener(request => {
       if (request.action === "storeThemeUpdated") {
         console.log(`[StorageManager] Received storeThemeUpdated: ${request.title} v${request.version}`);
         this.handleStoreThemeUpdateMessage(request);
