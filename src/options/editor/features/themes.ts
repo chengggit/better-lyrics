@@ -114,10 +114,11 @@ export class ThemeManager {
 export const themeManager = new ThemeManager();
 
 export async function applyStoreThemeToEditor(themeId: string, css: string, title: string): Promise<void> {
+  console.log(`[BetterLyrics] applyStoreThemeToEditor called: ${title}, CSS length: ${css.length}`);
   const themeContent = css.startsWith("/*") ? css : `/* ${title}, a store theme */\n\n${css}\n`;
 
   await editorStateManager.queueOperation("theme", async () => {
-    console.log(`[ThemeManager] Setting store theme: ${title}`);
+    console.log(`[ThemeManager] Setting store theme: ${title}, content length: ${themeContent.length}`);
 
     await editorStateManager.setEditorContent(themeContent, `store-theme:${themeId}`);
 
@@ -147,9 +148,13 @@ export async function applyStoreThemeToEditor(themeId: string, css: string, titl
 }
 
 export function initStoreThemeListener(): void {
+  console.log("[BetterLyrics] initStoreThemeListener registered");
+
   document.addEventListener("store-theme-applied", async (event: Event) => {
+    console.log("[BetterLyrics] store-theme-applied event received");
     const customEvent = event as CustomEvent<{ themeId: string; css: string; title: string }>;
     const { themeId, css, title } = customEvent.detail;
+    console.log(`[BetterLyrics] Event detail: themeId=${themeId}, title=${title}, CSS length=${css.length}`);
     await applyStoreThemeToEditor(themeId, css, title);
   });
 }
@@ -192,6 +197,7 @@ export function hideThemeName(): void {
 }
 
 export function onChange(_state: string) {
+  console.log("[BetterLyrics] onChange triggered, isProgrammaticChange:", editorStateManager.getIsProgrammaticChange());
   if (editorStateManager.getIsProgrammaticChange()) {
     return;
   }
@@ -209,6 +215,7 @@ export function onChange(_state: string) {
   } else if (isCustom && themeName) {
     debounceSaveCustomTheme();
   }
+  console.log("[BetterLyrics] onChange calling debounceSave");
   debounceSave();
 }
 
@@ -244,6 +251,7 @@ function debounceSave() {
 }
 
 export function saveToStorage(isTheme = false) {
+  console.log("[BetterLyrics] saveToStorage called, isTheme:", isTheme);
   const currentEditor = editorStateManager.getEditor();
   if (!currentEditor) {
     console.error("[BetterLyrics] Cannot save: editor not initialized");
@@ -253,6 +261,7 @@ export function saveToStorage(isTheme = false) {
   editorStateManager.incrementSaveCount();
   editorStateManager.setIsSaving(true);
   const css = currentEditor.state.doc.toString();
+  console.log("[BetterLyrics] saveToStorage CSS length:", css.length);
 
   const isCustom = editorStateManager.getIsCustomTheme();
   if (!isTheme && editorStateManager.getIsUserTyping() && !isCustom) {
@@ -262,6 +271,7 @@ export function saveToStorage(isTheme = false) {
 
   saveToStorageWithFallback(css, isTheme)
     .then(result => {
+      console.log("[BetterLyrics] saveToStorageWithFallback result:", result);
       if (result.success && result.strategy) {
         showSyncSuccess(result.strategy, result.wasRetry);
         sendUpdateMessage(css, result.strategy);

@@ -7,50 +7,82 @@ import type {
 } from "./types";
 
 const INDEX_REPO = "better-lyrics/themes";
-const BRANCH_CANDIDATES = ["main", "master"];
 
-const REQUIRED_ORIGINS = ["https://raw.githubusercontent.com/*", "https://api.github.com/*"];
+const REQUIRED_ORIGINS = [
+  "https://raw.githubusercontent.com/*",
+  "https://api.github.com/*",
+  "https://better-lyrics-themes-api.boidu.dev/*",
+];
 
-const repoBranchCache = new Map<string, string>();
+interface BranchCacheEntry {
+  branch: string;
+  timestamp: number;
+}
+
+const BRANCH_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const repoBranchCache = new Map<string, BranchCacheEntry>();
 
 function getRawGitHubUrl(repo: string, branch: string, path: string, bustCache = true): string {
   const base = `https://raw.githubusercontent.com/${repo}/${branch}/${path}`;
   return bustCache ? `${base}?t=${Date.now()}` : base;
 }
 
-async function detectRepoBranch(repo: string, checkFile = "metadata.json"): Promise<string> {
-  const cacheKey = `${repo}:${checkFile}`;
-  const cached = repoBranchCache.get(cacheKey);
-  if (cached) return cached;
-
-  for (const branch of BRANCH_CANDIDATES) {
-    const url = getRawGitHubUrl(repo, branch, checkFile);
-    try {
-      const response = await fetch(url, { method: "HEAD" });
-      if (response.ok) {
-        repoBranchCache.set(cacheKey, branch);
-        return branch;
-      }
-    } catch {
-      // Silently continue to next branch candidate
-    }
+async function testBranchExists(repo: string, branch: string): Promise<boolean> {
+  try {
+    const url = `https://raw.githubusercontent.com/${repo}/${branch}/metadata.json`;
+    const response = await fetch(url, { method: "HEAD" });
+    return response.ok;
+  } catch {
+    return false;
   }
-
-  repoBranchCache.set(cacheKey, BRANCH_CANDIDATES[0]);
-  return BRANCH_CANDIDATES[0];
 }
 
-export async function checkGitHubPermissions(): Promise<PermissionStatus> {
+async function getDefaultBranch(repo: string): Promise<string> {
+  const cached = repoBranchCache.get(repo);
+  if (cached && Date.now() - cached.timestamp < BRANCH_CACHE_TTL_MS) {
+    return cached.branch;
+  }
+
+  try {
+    const response = await fetch(`https://api.github.com/repos/${repo}`, {
+      headers: { Accept: "application/vnd.github.v3+json" },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const branch = data.default_branch || "main";
+      repoBranchCache.set(repo, { branch, timestamp: Date.now() });
+      return branch;
+    }
+  } catch {
+    // API failed, fall through to branch testing
+  }
+
+  if (await testBranchExists(repo, "master")) {
+    repoBranchCache.set(repo, { branch: "master", timestamp: Date.now() });
+    return "master";
+  }
+
+  if (await testBranchExists(repo, "main")) {
+    repoBranchCache.set(repo, { branch: "main", timestamp: Date.now() });
+    return "main";
+  }
+
+  repoBranchCache.set(repo, { branch: "main", timestamp: Date.now() });
+  return "main";
+}
+
+export async function checkStorePermissions(): Promise<PermissionStatus> {
   const granted = await chrome.permissions.contains({ origins: REQUIRED_ORIGINS });
   return { granted, canRequest: true };
 }
 
-export async function requestGitHubPermissions(): Promise<boolean> {
+export async function requestStorePermissions(): Promise<boolean> {
   return chrome.permissions.request({ origins: REQUIRED_ORIGINS });
 }
 
 export async function fetchThemeStoreIndex(): Promise<string[]> {
-  const branch = await detectRepoBranch(INDEX_REPO, "index.json");
+  const branch = await getDefaultBranch(INDEX_REPO);
   const url = getRawGitHubUrl(INDEX_REPO, branch, "index.json");
   const response = await fetch(url, { cache: "no-store" });
 
@@ -62,8 +94,8 @@ export async function fetchThemeStoreIndex(): Promise<string[]> {
   return data.themes.map(t => t.repo);
 }
 
-export async function fetchThemeMetadata(repo: string): Promise<StoreThemeMetadata> {
-  const branch = await detectRepoBranch(repo);
+export async function fetchThemeMetadata(repo: string, branchOverride?: string): Promise<StoreThemeMetadata> {
+  const branch = branchOverride ?? (await getDefaultBranch(repo));
   const url = getRawGitHubUrl(repo, branch, "metadata.json");
   const response = await fetch(url, { cache: "no-store" });
 
@@ -74,8 +106,8 @@ export async function fetchThemeMetadata(repo: string): Promise<StoreThemeMetada
   return response.json();
 }
 
-export async function fetchThemeCSS(repo: string): Promise<string> {
-  const branch = await detectRepoBranch(repo);
+export async function fetchThemeCSS(repo: string, branchOverride?: string): Promise<string> {
+  const branch = branchOverride ?? (await getDefaultBranch(repo));
   const url = getRawGitHubUrl(repo, branch, "style.css");
   const response = await fetch(url, { cache: "no-store" });
 
@@ -84,19 +116,6 @@ export async function fetchThemeCSS(repo: string): Promise<string> {
   }
 
   return response.text();
-}
-
-export async function fetchThemeShaderConfig(repo: string): Promise<Record<string, unknown> | null> {
-  const branch = await detectRepoBranch(repo);
-  const url = getRawGitHubUrl(repo, branch, "shader.json");
-
-  try {
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) return null;
-    return response.json();
-  } catch {
-    return null;
-  }
 }
 
 async function checkFileExists(url: string): Promise<boolean> {
@@ -108,9 +127,25 @@ async function checkFileExists(url: string): Promise<boolean> {
   }
 }
 
-export async function fetchFullTheme(repo: string): Promise<StoreTheme> {
-  const metadata = await fetchThemeMetadata(repo);
-  const branch = await detectRepoBranch(repo);
+export async function fetchThemeShaderConfig(repo: string, branchOverride?: string): Promise<Record<string, unknown> | null> {
+  const branch = branchOverride ?? (await getDefaultBranch(repo));
+  const url = getRawGitHubUrl(repo, branch, "shader.json");
+
+  const exists = await checkFileExists(url);
+  if (!exists) return null;
+
+  try {
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) return null;
+    return response.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchFullTheme(repo: string, branchOverride?: string): Promise<StoreTheme> {
+  const branch = branchOverride ?? (await getDefaultBranch(repo));
+  const metadata = await fetchThemeMetadata(repo, branch);
 
   const baseUrl = getRawGitHubUrl(repo, branch, "", false);
   const cssUrl = `${baseUrl}style.css`;
@@ -123,13 +158,16 @@ export async function fetchFullTheme(repo: string): Promise<StoreTheme> {
     }
   }
 
-  let coverUrl = `${baseUrl}cover.png`;
-  const hasCover = await checkFileExists(coverUrl);
-  if (!hasCover && imageUrls.length > 0) {
-    coverUrl = imageUrls[0];
-  }
+  let coverUrl: string;
+  let allImageUrls: string[];
 
-  const allImageUrls = [coverUrl, ...imageUrls.filter(url => url !== coverUrl)];
+  if (imageUrls.length > 0) {
+    coverUrl = imageUrls[0];
+    allImageUrls = imageUrls;
+  } else {
+    coverUrl = `${baseUrl}cover.png`;
+    allImageUrls = [coverUrl];
+  }
 
   return {
     ...metadata,
@@ -158,10 +196,10 @@ export async function fetchAllStoreThemes(): Promise<StoreTheme[]> {
   return themes;
 }
 
-export async function validateThemeRepo(repo: string): Promise<ThemeValidationResult> {
+export async function validateThemeRepo(repo: string, branchOverride?: string): Promise<ThemeValidationResult> {
   const errors: string[] = [];
   const missingFiles: string[] = [];
-  const branch = await detectRepoBranch(repo);
+  const branch = branchOverride ?? (await getDefaultBranch(repo));
 
   const requiredFiles = ["style.css", "metadata.json"];
 
@@ -183,7 +221,7 @@ export async function validateThemeRepo(repo: string): Promise<ThemeValidationRe
   }
 
   try {
-    const metadata = await fetchThemeMetadata(repo);
+    const metadata = await fetchThemeMetadata(repo, branch);
 
     if (!metadata.id) errors.push("metadata.json missing 'id' field");
     if (!metadata.title) errors.push("metadata.json missing 'title' field");
@@ -197,10 +235,12 @@ export async function validateThemeRepo(repo: string): Promise<ThemeValidationRe
     }
     if (!metadata.version) errors.push("metadata.json missing 'version' field");
 
-    const coverUrl = getRawGitHubUrl(repo, branch, "cover.png");
-    const hasCover = await checkFileExists(coverUrl);
-    if (!hasCover && (!metadata.images || metadata.images.length === 0)) {
-      errors.push("Theme must have either cover.png or images in metadata");
+    if (!metadata.images || metadata.images.length === 0) {
+      const coverUrl = getRawGitHubUrl(repo, branch, "cover.png");
+      const hasCover = await checkFileExists(coverUrl);
+      if (!hasCover) {
+        errors.push("Theme must have either cover.png or images in metadata");
+      }
     }
   } catch (err) {
     errors.push(`Failed to parse metadata.json: ${err}`);
@@ -213,17 +253,35 @@ export async function validateThemeRepo(repo: string): Promise<ThemeValidationRe
   };
 }
 
-export function parseGitHubRepoUrl(input: string): string | null {
+export interface ParsedGitHubUrl {
+  repo: string;
+  branch?: string;
+}
+
+export function parseGitHubRepoUrl(input: string): ParsedGitHubUrl | null {
   const trimmed = input.trim();
 
-  const fullUrlMatch = trimmed.match(/^(?:https?:\/\/)?(?:www\.)?github\.com\/([^/]+\/[^/]+)\/?(?:\.git)?$/i);
-  if (fullUrlMatch) {
-    return fullUrlMatch[1].replace(/\.git$/, "");
+  // Match: github.com/user/repo/tree/branch-name (with optional nested paths like feature/foo)
+  const branchUrlMatch = trimmed.match(
+    /^(?:https?:\/\/)?(?:www\.)?github\.com\/([^/]+\/[^/]+)\/tree\/(.+?)\/?$/i
+  );
+  if (branchUrlMatch) {
+    return {
+      repo: branchUrlMatch[1],
+      branch: branchUrlMatch[2],
+    };
   }
 
+  // Match: github.com/user/repo
+  const fullUrlMatch = trimmed.match(/^(?:https?:\/\/)?(?:www\.)?github\.com\/([^/]+\/[^/]+)\/?(?:\.git)?$/i);
+  if (fullUrlMatch) {
+    return { repo: fullUrlMatch[1].replace(/\.git$/, "") };
+  }
+
+  // Match: user/repo
   const shortMatch = trimmed.match(/^([^/]+\/[^/]+)$/);
   if (shortMatch && !trimmed.includes(" ") && !trimmed.includes(":")) {
-    return shortMatch[1];
+    return { repo: shortMatch[1] };
   }
 
   return null;

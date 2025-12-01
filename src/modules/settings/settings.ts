@@ -161,16 +161,19 @@ export function hideCursorOnIdle(): void {
 
 export function listenForPopupMessages(): void {
   chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
+    console.log("[BetterLyrics Content] Received message:", request.action);
     if (request.action === "updateCSS") {
-      // Enhanced CSS handling - use the new loadCustomCSS method
+      console.log("[BetterLyrics Content] Processing updateCSS, CSS length:", request.css?.length);
       if (request.css) {
-        // Direct CSS provided (from editor)
+        console.log("[BetterLyrics Content] Applying CSS directly");
         Utils.applyCustomCSS(request.css);
         calculateLyricPositions();
+        console.log("[BetterLyrics Content] CSS applied successfully");
       } else {
-        // Load CSS from storage (hybrid storage support)
+        console.log("[BetterLyrics Content] Loading CSS from storage");
         Storage.getAndApplyCustomCSS().then(() => {
           calculateLyricPositions();
+          console.log("[BetterLyrics Content] CSS loaded from storage and applied");
         });
       }
     } else if (request.action === "updateSettings") {

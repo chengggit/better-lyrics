@@ -1,8 +1,9 @@
 import type { SaveResult } from "../types";
+import type { InstalledStoreTheme } from "../../store/types";
 import { SYNC_STORAGE_LIMIT, MAX_RETRY_ATTEMPTS, CHUNK_SIZE, LOCAL_STORAGE_SAFE_LIMIT } from "../core/editor";
 import { syncIndicator } from "../ui/dom";
 import { editorStateManager } from "../core/state";
-import { setThemeName } from "./themes";
+import { setThemeName, showThemeName } from "./themes";
 
 async function compressCSS(css: string): Promise<string> {
   try {
@@ -312,6 +313,7 @@ export function showSyncError(error: any): void {
 }
 
 export async function sendUpdateMessage(css: string, strategy: "local" | "sync" | "chunked"): Promise<void> {
+  console.log(`[BetterLyrics] sendUpdateMessage called, CSS length: ${css.length}, strategy: ${strategy}`);
   try {
     chrome.runtime
       .sendMessage({
@@ -319,11 +321,14 @@ export async function sendUpdateMessage(css: string, strategy: "local" | "sync" 
         css: css,
         storageType: strategy,
       })
+      .then(() => {
+        console.log("[BetterLyrics] Message sent to background successfully");
+      })
       .catch(error => {
-        console.log("[BetterLyrics] (Safe to ignore) Error sending message:", error);
+        console.log("[BetterLyrics] Error sending message to background:", error);
       });
   } catch (err) {
-    console.log(err);
+    console.log("[BetterLyrics] sendUpdateMessage exception:", err);
   }
 }
 
@@ -353,10 +358,61 @@ export class StorageManager {
         console.log("[StorageManager] Chunked CSS detected, handling as CSS change");
         await this.handleCSSChange(changes.customCSS_chunk_0);
       }
+
+      if (namespace === "local" && Object.hasOwn(changes, "installedStoreThemes")) {
+        await this.handleStoreThemeUpdate(changes.installedStoreThemes);
+      }
+    });
+
+    chrome.runtime.onMessage.addListener((request) => {
+      if (request.action === "storeThemeUpdated") {
+        console.log(`[StorageManager] Received storeThemeUpdated: ${request.title} v${request.version}`);
+        this.handleStoreThemeUpdateMessage(request);
+      }
+      return true;
     });
 
     this.isInitialized = true;
     console.log("[StorageManager] Storage listeners initialized");
+  }
+
+  private async handleStoreThemeUpdateMessage(request: {
+    themeId: string;
+    css: string;
+    title: string;
+    version: string;
+  }): Promise<void> {
+    if (editorStateManager.getIsSaving()) {
+      console.log("[StorageManager] Skipping store theme update (save in progress)");
+      return;
+    }
+
+    const syncData = await chrome.storage.sync.get("themeName");
+    const currentThemeName = syncData.themeName as string | undefined;
+
+    if (!currentThemeName?.startsWith("store:")) {
+      console.log("[StorageManager] No store theme active, skipping message");
+      return;
+    }
+
+    const activeThemeId = currentThemeName.slice(6);
+    if (activeThemeId !== request.themeId) {
+      console.log("[StorageManager] Message is for different theme, skipping");
+      return;
+    }
+
+    console.log(`[StorageManager] Applying store theme update from message: ${request.title} v${request.version}`);
+
+    await editorStateManager.queueOperation("storage", async () => {
+      await editorStateManager.setEditorContent(request.css, "store-theme-update-message");
+
+      const result = await saveToStorageWithFallback(request.css, true);
+      if (result.success && result.strategy) {
+        showSyncSuccess(result.strategy, result.wasRetry);
+        await sendUpdateMessage(request.css, result.strategy);
+        console.log("[StorageManager] Store theme update from message propagated to YouTube Music");
+      }
+    });
   }
 
   private async handleCSSChange(_change: any): Promise<void> {
@@ -402,6 +458,69 @@ export class StorageManager {
       const css = await loadCustomCSS();
       console.log(`[StorageManager] CSS loaded from theme change: ${css.length} bytes`);
       await editorStateManager.setEditorContent(css, "theme-name-change");
+    });
+  }
+
+  private async handleStoreThemeUpdate(change: {
+    oldValue?: InstalledStoreTheme[];
+    newValue?: InstalledStoreTheme[];
+  }): Promise<void> {
+    if (editorStateManager.getIsSaving()) {
+      console.log("[StorageManager] Skipping store theme reload (save in progress)");
+      return;
+    }
+
+    const syncData = await chrome.storage.sync.get("themeName");
+    const currentThemeName = syncData.themeName as string | undefined;
+
+    if (!currentThemeName?.startsWith("store:")) {
+      console.log("[StorageManager] No store theme active, skipping");
+      return;
+    }
+
+    const activeThemeId = currentThemeName.slice(6);
+    const oldThemes = change.oldValue || [];
+    const newThemes = change.newValue || [];
+
+    const oldTheme = oldThemes.find(t => t.id === activeThemeId);
+    const newTheme = newThemes.find(t => t.id === activeThemeId);
+
+    if (!newTheme) {
+      console.log("[StorageManager] Active store theme not found in updated themes");
+      return;
+    }
+
+    if (!newTheme.title || !newTheme.css) {
+      console.log("[StorageManager] Store theme missing required fields, skipping");
+      return;
+    }
+
+    if (oldTheme?.version === newTheme.version && oldTheme?.css === newTheme.css) {
+      console.log("[StorageManager] Store theme unchanged, skipping");
+      return;
+    }
+
+    const themeVersion = newTheme.version || "unknown";
+    const themeCreators = Array.isArray(newTheme.creators) ? newTheme.creators.join(", ") : "Unknown";
+
+    console.log(`[StorageManager] Store theme updated: ${newTheme.title} v${themeVersion}`);
+
+    const themeContent = `/* ${newTheme.title}, a store theme by ${themeCreators} */\n\n${newTheme.css}\n`;
+    const displayName = newTheme.version ? `${newTheme.title} (v${newTheme.version})` : newTheme.title;
+
+    await editorStateManager.queueOperation("storage", async () => {
+      console.log(`[StorageManager] Applying updated store theme to editor: ${themeContent.length} bytes`);
+      await editorStateManager.setEditorContent(themeContent, "store-theme-update");
+
+      editorStateManager.setCurrentThemeName(newTheme.title);
+      showThemeName(displayName, false);
+
+      const result = await saveToStorageWithFallback(themeContent, true);
+      if (result.success && result.strategy) {
+        showSyncSuccess(result.strategy, result.wasRetry);
+        await sendUpdateMessage(themeContent, result.strategy);
+        console.log("[StorageManager] Store theme update propagated to YouTube Music");
+      }
     });
   }
 

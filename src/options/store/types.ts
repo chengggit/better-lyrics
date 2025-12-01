@@ -48,3 +48,16 @@ export interface PermissionStatus {
   granted: boolean;
   canRequest: boolean;
 }
+
+export interface ThemeStats {
+  installs: number;
+  rating: number;
+  ratingCount: number;
+}
+
+export type AllThemeStats = Record<string, ThemeStats>;
+
+export interface RatingResult {
+  average: number;
+  count: number;
+}

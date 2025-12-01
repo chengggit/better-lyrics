@@ -1,6 +1,6 @@
 // Function to save user options
 import Sortable from "sortablejs";
-import { initStoreUI, openStoreModal, openUrlModal, setupYourThemesButton } from "./store/store";
+import { initStoreUI, setupYourThemesButton } from "./store/store";
 
 interface Options {
   isLogsEnabled: boolean;
@@ -344,6 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initStoreUI();
   setupYourThemesButton();
 
-  document.getElementById("browse-themes-btn")?.addEventListener("click", openStoreModal);
-  document.getElementById("url-install-btn")?.addEventListener("click", openUrlModal);
+  document.getElementById("browse-themes-btn")?.addEventListener("click", () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL("pages/standalone-marketplace.html") });
+  });
 });

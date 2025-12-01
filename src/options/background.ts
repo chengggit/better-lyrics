@@ -9,14 +9,14 @@
  * @returns {boolean} Returns true to indicate asynchronous response
  */
 import { getActiveStoreTheme, getInstalledStoreThemes, getInstalledTheme, performSilentUpdates } from "./store/themeStoreManager";
-import { checkGitHubPermissions, fetchAllStoreThemes } from "./store/themeStoreService";
+import { checkStorePermissions, fetchAllStoreThemes } from "./store/themeStoreService";
 
 const THEME_UPDATE_ALARM = "theme-update-check";
 const UPDATE_INTERVAL_MINUTES = 360; // 6 hours
 
 async function checkAndApplyThemeUpdates(): Promise<void> {
   try {
-    const permission = await checkGitHubPermissions();
+    const permission = await checkStorePermissions();
     if (!permission.granted) return;
 
     const installed = await getInstalledStoreThemes();
@@ -33,6 +33,8 @@ async function checkAndApplyThemeUpdates(): Promise<void> {
       if (activeThemeId && updatedIds.includes(activeThemeId)) {
         const updatedTheme = await getInstalledTheme(activeThemeId);
         if (updatedTheme) {
+          const formattedCSS = `/* ${updatedTheme.title}, a store theme by ${updatedTheme.creators.join(", ")} */\n\n${updatedTheme.css}\n`;
+
           chrome.tabs.query({ url: "*://music.youtube.com/*" }, tabs => {
             tabs.forEach(tab => {
               if (tab.id != null) {
@@ -40,6 +42,14 @@ async function checkAndApplyThemeUpdates(): Promise<void> {
               }
             });
           });
+
+          chrome.runtime.sendMessage({
+            action: "storeThemeUpdated",
+            themeId: activeThemeId,
+            css: formattedCSS,
+            title: updatedTheme.title,
+            version: updatedTheme.version,
+          }).catch(() => {});
         }
       }
     }
@@ -77,20 +87,28 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 chrome.runtime.onMessage.addListener(request => {
+  console.log("[BetterLyrics Background] Received message:", request.action);
   if (request.action === "updateCSS") {
+    console.log("[BetterLyrics Background] Processing updateCSS, CSS length:", request.css?.length);
     chrome.tabs.query({ url: "*://music.youtube.com/*" }, tabs => {
+      console.log(`[BetterLyrics Background] Found ${tabs.length} YouTube Music tab(s)`);
       tabs.forEach(tab => {
         if (tab.id != null) {
-          chrome.tabs.sendMessage(tab.id, { action: "updateCSS", css: request.css }).catch(error => {
-            console.log(`[BetterLyrics] (Safe to ignore) Error sending message to tab ${tab.id}:`, error);
-          });
+          console.log(`[BetterLyrics Background] Sending to tab ${tab.id}`);
+          chrome.tabs.sendMessage(tab.id, { action: "updateCSS", css: request.css })
+            .then(() => {
+              console.log(`[BetterLyrics Background] Successfully sent to tab ${tab.id}`);
+            })
+            .catch(error => {
+              console.log(`[BetterLyrics Background] Error sending to tab ${tab.id}:`, error);
+            });
         } else {
-          console.log("[BetterLyrics] TabId is null");
+          console.log("[BetterLyrics Background] TabId is null");
         }
       });
     });
   } else if (request.action === "updateSettings") {
-    console.log("[BetterLyrics] Update Settings Message");
+    console.log("[BetterLyrics Background] Update Settings Message");
   }
   return true;
 });
