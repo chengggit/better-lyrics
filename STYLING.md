@@ -401,6 +401,10 @@ When a lyric is selected:
 
 This creates the final swipe and glow effects synchronized with the music. Note the use of `--blyrics-swipe-delay` and `--blyrics-anim-delay` custom properties for precise timing control.
 
+`--blyrics-anim-delay` = the time until this lyric highlights
+`--blyrics-swipe-delay` = (the time until this lyric highlights) - 0.1 * (lyric duration)
+
+
 ## 6. Creating Animation Effects
 
 The CSS defines several keyframe animations:
