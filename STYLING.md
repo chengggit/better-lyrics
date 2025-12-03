@@ -273,7 +273,7 @@ When a lyric becomes active, the line gets the `.blyrics--animating` class:
 
 This changes the scale to `--blyrics-active-scale`, triggering the transition defined above.
 
-> **Important**: Use `.blyrics--animating` for styling active lines. Avoid using `.blyrics--active` directly for styling as it causes issues when multiple lyrics are selected. Use `.blyrics--active` only in `:has()` checks to detect if any lyric is highlighted (e.g., `.blyrics-container:not(:has(.blyrics--active))` for instrumental sections).
+> **Important**: Use `.blyrics--animating` for styling active lines. Avoid using `.blyrics--active` directly for styling as it causes issues when multiple lyrics are selected.
 
 ### Styling Each Word
 
