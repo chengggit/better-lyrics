@@ -271,7 +271,7 @@ When a lyric becomes active, the line gets the `.blyrics--animating` class:
 
 This changes the scale to `--blyrics-active-scale`, triggering the transition defined above.
 
-> **Important**: Use `.blyrics--animating` for styling active lines. Avoid using `.blyrics--active` directly for styling as it causes issues when multiple lyrics are selected. Use `.blyrics--active` only in `:has()` checks to detect if any lyric is highlighted (e.g., `.blyrics-container:not(:has(.blyrics--active))` for instrumental sections).
+> **Important**: Use `.blyrics--animating` for styling active lines. Avoid using `.blyrics--active` directly for styling as it causes issues when multiple lyrics are selected.
 
 ### Styling Each Word
 
@@ -398,6 +398,10 @@ When a lyric is selected:
 ```
 
 This creates the final swipe and glow effects synchronized with the music. Note the use of `--blyrics-swipe-delay` and `--blyrics-anim-delay` custom properties for precise timing control.
+
+`--blyrics-anim-delay` = the time until this lyric highlights
+`--blyrics-swipe-delay` = (the time until this lyric highlights) - 0.1 * (lyric duration)
+
 
 ## 6. Creating Animation Effects
 

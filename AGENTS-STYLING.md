@@ -200,13 +200,15 @@ Use `.blyrics--animating` for styling active lines, but `.blyrics--active` in `:
   transition: opacity 0.4s ease, filter 0.4s ease, transform 0.5s ease calc(var(--blyrics-anim-delay, 0s) - 0.1s);
 }
 
-.blyrics-container:not(:has(.blyrics--active)) > div {
+.blyrics-container[data-sync="none"] > div {
   opacity: 1;
   filter: none;
 }
 ```
 
-Note: Use `.blyrics--active` in `:has()` to detect if any lyric is highlighted (e.g., show all during instrumentals).
+Note: Be sure to consider styling when there is no timing information. 
+Also keep in mind that lyrics without timing information are shown while lyrics are loading. 
+Make sure the state transition from `data-sync="none"` ->  `data-sync="synced"` /  `data-sync="richsynced"` is smooth.
 
 ### Pattern 4: Use Duration Variable for Timing
 
