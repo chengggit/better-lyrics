@@ -77,13 +77,19 @@
 .marketplace-filters {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   gap: 1.5rem;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
   padding: 1rem;
   margin-bottom: 1.5rem;
+}
+
+.marketplace-btn-group{
+	display: flex;
+	gap: .5rem;
+	margin-left: auto;
 }
 
 .marketplace-url-btn {
@@ -1695,6 +1701,12 @@ kbd.kbd-icon svg {
 .shortcut-keys span {
   font-size: 0.6875rem;
   color: rgba(255, 255, 255, 0.4);
+}
+
+.marketplace-btn-group{
+	display: flex;
+	gap: .5rem;
+	margin-left: auto;
 }
 
 /* Toast Notification */
