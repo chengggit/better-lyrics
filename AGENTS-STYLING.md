@@ -39,8 +39,8 @@ Override these variables in custom CSS to create themes:
   --blyrics-lyric-highlight-fade-in-duration: 0.33s;
   --blyrics-lyric-highlight-fade-out-duration: 0.5s;
   --blyrics-wobble-duration: 1s;
-  --blyrics-timing-offset: 0.02s;
-  --blyrics-richsync-timing-offset: 0.115s;
+  --blyrics-timing-offset: 0.115s;
+  --blyrics-richsync-timing-offset: 0.02s;
   --blyrics-scroll-timing-offset: 0.5s;
   --blyrics-lyric-scroll-duration: 750ms;
   --blyrics-lyric-scroll-timing-function: cubic-bezier(0.86, 0, 0.07, 1);
@@ -105,21 +105,21 @@ Override these variables in custom CSS to create themes:
 
 ## Important Classes & Selectors
 
-| Selector | Purpose |
-|----------|---------|
-| `.blyrics-container` | Main lyrics wrapper |
-| `.blyrics--line` | Each lyric line |
-| `.blyrics--word` | Each word in a line |
-| `.blyrics--animating` | Currently active/animating element (USE THIS for styling) |
-| `.blyrics--pre-animating` | Element about to animate |
-| `.blyrics--active` | Currently highlighted lyric (AVOID for styling - use `.blyrics--animating`) |
-| `.blyrics-rtl` | RTL language support |
-| `.blyrics--translated` | Translated text |
-| `.blyrics--romanized` | Romanized text |
-| `.blyrics--error` | Error message |
-| `[data-agent="v2"]` | Secondary voice (right-aligned) |
-| `[data-agent="v3"]` | Tertiary voice (right-aligned) |
-| `[data-agent="v1000"]` | Both speakers simultaneously (duet/chorus, centered) |
+| Selector                  | Purpose                                                                     |
+| ------------------------- | --------------------------------------------------------------------------- |
+| `.blyrics-container`      | Main lyrics wrapper                                                         |
+| `.blyrics--line`          | Each lyric line                                                             |
+| `.blyrics--word`          | Each word in a line                                                         |
+| `.blyrics--animating`     | Currently active/animating element (USE THIS for styling)                   |
+| `.blyrics--pre-animating` | Element about to animate                                                    |
+| `.blyrics--active`        | Currently highlighted lyric (AVOID for styling - use `.blyrics--animating`) |
+| `.blyrics-rtl`            | RTL language support                                                        |
+| `.blyrics--translated`    | Translated text                                                             |
+| `.blyrics--romanized`     | Romanized text                                                              |
+| `.blyrics--error`         | Error message                                                               |
+| `[data-agent="v2"]`       | Secondary voice (right-aligned)                                             |
+| `[data-agent="v3"]`       | Tertiary voice (right-aligned)                                              |
+| `[data-agent="v1000"]`    | Both speakers simultaneously (duet/chorus, centered)                        |
 
 ## Animation System
 
@@ -336,10 +336,10 @@ ytmusic-player-page::before {
 
 ## Important Selectors
 
-| Selector | When to Use |
-|----------|-------------|
-| `.blyrics--animating` | Styling the active line (PREFERRED) |
-| `.blyrics-user-scrolling` | User is manually scrolling (disable effects) |
+| Selector                       | When to Use                                        |
+| ------------------------------ | -------------------------------------------------- |
+| `.blyrics--animating`          | Styling the active line (PREFERRED)                |
+| `.blyrics-user-scrolling`      | User is manually scrolling (disable effects)       |
 | `:not(:has(.blyrics--active))` | No highlighted lyric (e.g., instrumental sections) |
 
 **Class usage:**
@@ -356,21 +356,21 @@ ytmusic-player-page::before {
 
 ## Files Reference
 
-| File | Purpose |
-|------|---------|
-| `blyrics.css` | Core lyrics styling and animations |
-| `ytmusic.css` | YouTube Music layout modifications |
-| `themesong.css` | ThemeSong extension compatibility |
+| File                            | Purpose                              |
+| ------------------------------- | ------------------------------------ |
+| `blyrics.css`                   | Core lyrics styling and animations   |
+| `ytmusic.css`                   | YouTube Music layout modifications   |
+| `themesong.css`                 | ThemeSong extension compatibility    |
 | `disablestylizedanimations.css` | Disables animations when toggled off |
 
 ## Existing Theme Files
 
 Reference these in `public/css/themes/` for inspiration:
 
-| Theme | Style |
-|-------|-------|
-| `Default.css` | Minimal starting point with comments |
-| `Minimal.css` | Clean, no animations, opacity-based |
-| `Spotlight.css` | Blur effect on non-active lines |
-| `Luxurious Glass.css` | Glassmorphism, animated background, underline |
-| `Dynamic Background.css` | Extensive YouTube Music UI customization |
+| Theme                    | Style                                         |
+| ------------------------ | --------------------------------------------- |
+| `Default.css`            | Minimal starting point with comments          |
+| `Minimal.css`            | Clean, no animations, opacity-based           |
+| `Spotlight.css`          | Blur effect on non-active lines               |
+| `Luxurious Glass.css`    | Glassmorphism, animated background, underline |
+| `Dynamic Background.css` | Extensive YouTube Music UI customization      |
