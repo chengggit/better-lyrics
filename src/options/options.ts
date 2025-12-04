@@ -345,6 +345,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupYourThemesButton();
 
   document.getElementById("browse-themes-btn")?.addEventListener("click", () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL("pages/standalone-marketplace.html") });
+    chrome.tabs.create({ url: chrome.runtime.getURL("pages/marketplace.html") });
   });
 });

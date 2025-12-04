@@ -42,7 +42,7 @@
         "css/themes/*.css",
         "*.js.map",
         "pages/standalone-editor.html",
-        "pages/standalone-marketplace.html"
+        "pages/marketplace.html"
       ]
     }
   ],
