@@ -89,7 +89,7 @@ Override these variables in custom CSS to create themes:
 ## DOM Structure
 
 ```
-.blyrics-container
+.blyrics-container [data-sync="richsync|synced|none"] [data-loader-visible="true|false"]
 ├── .blyrics--line (div) [data-agent="v1|v2|v3"]
 │   ├── span
 │   │   └── .blyrics--word (span) [data-content="word"]
@@ -102,6 +102,13 @@ Override these variables in custom CSS to create themes:
 ├── .blyrics--romanized (span) - romanization
 └── .blyrics-footer
 ```
+
+### Container Data Attributes
+
+| Attribute             | Values                             | Description                                                |
+| --------------------- | ---------------------------------- | ---------------------------------------------------------- |
+| `data-sync`           | `"richsync"`, `"synced"`, `"none"` | Synchronization type of current lyrics                     |
+| `data-loader-visible` | `"true"`, `"false"`                | Whether the loading spinner is visible                     |
 
 ## Important Classes & Selectors
 

@@ -214,6 +214,55 @@ The main container for the lyrics is styled using the `.blyrics-container` class
 
 This sets the overall appearance of the lyrics container, including typography, positioning, and scroll behavior. The `isolation: isolate` property creates a new stacking context to prevent z-index issues with other page elements. Note that scrolling is achieved via `transform` for better performance.
 
+### Container Data Attributes
+
+The `.blyrics-container` element has two data attributes that indicate its current state:
+
+| Attribute             | Values                             | Description                                                      |
+| --------------------- | ---------------------------------- | ---------------------------------------------------------------- |
+| `data-sync`           | `"richsync"`, `"synced"`, `"none"` | Indicates the synchronization type of the current lyrics         |
+| `data-loader-visible` | `"true"`, `"false"`                | Indicates whether the loading spinner is currently visible       |
+
+#### Sync Type Styling
+
+Use `data-sync` to style lyrics differently based on their synchronization level:
+
+```css
+/* Lyrics with no timing information */
+.blyrics-container[data-sync="none"] > div {
+  opacity: 1;
+  filter: none;
+}
+
+/* Standard synced lyrics (line-level timing) */
+.blyrics-container[data-sync="synced"] > div {
+  /* your synced styles */
+}
+
+/* Rich-synced lyrics (word-level timing) */
+.blyrics-container[data-sync="richsync"] > div {
+  /* your richsync styles */
+}
+```
+
+**Note:** When lyrics are first loading, they may temporarily appear with `data-sync="none"` before transitioning to `"synced"` or `"richsync"`. Ensure your theme handles this transition smoothly.
+
+#### Loader Visibility Styling
+
+Use `data-loader-visible` to adjust styles when the loader is active:
+
+```css
+/* Hide or adjust lyrics container when loader is visible */
+.blyrics-container[data-loader-visible="true"] {
+  /* your styles during loading */
+}
+
+/* Normal display when loader is hidden */
+.blyrics-container[data-loader-visible="false"] {
+  /* your normal styles */
+}
+```
+
 ## 5. Styling Individual Lyric Lines
 
 Animating lyrics is a multi-step process involving various classes and properties that work together to ensure smooth, timed transitions even if the browser stutters. When a div or span has an active or animating class, it doesn't necessarily mean it's currently "active" or animating—these classes are applied early, and the code later inserts specific animation/transition delays to trigger effects at the correct time.
