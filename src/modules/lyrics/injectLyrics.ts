@@ -275,7 +275,7 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
       romanizedCacheResult = item.romanization;
     }
 
-    if (canInjectRomanizationsEarly) {
+    if (canInjectRomanizationsEarly && AppState.isRomanizationEnabled) {
       if (romanizedCacheResult !== item.words) {
         if (
           item.timedRomanization &&
@@ -326,18 +326,18 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
 
     let translationResult: TranslationResult | null;
 
-    let currentTranslationLang = Translation.getCurrentTranslationLanguage();
+    let targetTranslationLang = AppState.translationLanguage;
 
-    if (item.translation && langCodesMatch(currentTranslationLang, item.translation.lang)) {
+    if (item.translation && langCodesMatch(targetTranslationLang, item.translation.lang)) {
       translationResult = {
         originalLanguage: item.translation.lang,
         translatedText: item.translation.text,
       };
     } else {
-      translationResult = Translation.getTranslationFromCache(item.words, Translation.getCurrentTranslationLanguage());
+      translationResult = Translation.getTranslationFromCache(item.words, targetTranslationLang);
     }
 
-    if (translationResult) {
+    if (translationResult && AppState.isTranslateEnabled) {
       if (!isSameText(translationResult.translatedText, item.words)) {
         createTranslationElem().textContent = "\n" + translationResult.translatedText;
       }

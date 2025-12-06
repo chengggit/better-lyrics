@@ -182,6 +182,7 @@ export function listenForPopupMessages(): void {
       Utils.setUpLog();
       hideCursorOnIdle();
       handleSettings();
+      loadTranslationSettings();
       AppState.shouldInjectAlbumArt = "Unknown";
       onAlbumArtEnabled(
         () => (AppState.shouldInjectAlbumArt = true),
@@ -201,5 +202,16 @@ export function listenForPopupMessages(): void {
         sendResponse({ success: false });
       }
     }
+  });
+}
+
+/**
+ * Loads translation and romanization settings from storage and updates AppState.
+ */
+export function loadTranslationSettings(): void {
+  Storage.getStorage({ isTranslateEnabled: false, isRomanizationEnabled: false, translationLanguage: "en" }, items => {
+    AppState.isTranslateEnabled = items.isTranslateEnabled;
+    AppState.isRomanizationEnabled = items.isRomanizationEnabled;
+    AppState.translationLanguage = items.translationLanguage || "en";
   });
 }
