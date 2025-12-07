@@ -1,4 +1,5 @@
 import autoAnimate, { type AnimationController } from "@formkit/auto-animate";
+import DOMPurify from "dompurify";
 import { marked } from "marked";
 import { applyStoreThemeComplete } from "../editor/features/storage";
 import type { AllThemeStats, InstalledStoreTheme, StoreTheme, ThemeStats } from "./types";
@@ -45,10 +46,7 @@ let userRatingsCache: Record<string, number> = {};
 let userInstallsCache: Record<string, boolean> = {};
 let urlOnlyThemeCards: Map<string, HTMLElement> = new Map();
 
-function getUrlOnlyThemes(
-  installedThemes: InstalledStoreTheme[],
-  marketplaceIds: Set<string>
-): InstalledStoreTheme[] {
+function getUrlOnlyThemes(installedThemes: InstalledStoreTheme[], marketplaceIds: Set<string>): InstalledStoreTheme[] {
   return installedThemes.filter(t => t.source === "url" && !marketplaceIds.has(t.id));
 }
 
@@ -282,9 +280,12 @@ renderer.link = ({ href, text }) => {
 marked.use({ renderer });
 
 function parseMarkdown(text: string): DocumentFragment {
-  const html = marked.parse(text, { async: false }) as string;
+  // https://marked.js.org/#usage
+  const content = text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "");
+  const html = marked.parse(content, { async: false }) as string;
+  const sanitized = DOMPurify.sanitize(html.trim());
   const template = document.createElement("template");
-  template.innerHTML = html.trim();
+  template.innerHTML = sanitized;
   return template.content;
 }
 
@@ -1510,7 +1511,9 @@ async function openDetailModal(theme: StoreTheme, urlThemeInfo?: UrlThemeInfo): 
           const ratingStat = document.createElement("span");
           ratingStat.className = "detail-stat";
           ratingStat.appendChild(createStarIcon());
-          ratingStat.appendChild(document.createTextNode(`${themeStats.rating.toFixed(1)} (${themeStats.ratingCount})`));
+          ratingStat.appendChild(
+            document.createTextNode(`${themeStats.rating.toFixed(1)} (${themeStats.ratingCount})`)
+          );
           statsEl.appendChild(ratingStat);
         }
       }
