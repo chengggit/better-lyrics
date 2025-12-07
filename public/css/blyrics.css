@@ -328,7 +328,7 @@
 	font-size: 2rem;
 	font-weight: 700;
 	isolation: isolate;
-	line-height: 1;
+	line-height: 1.5;
 	white-space: pre;
 	z-index: 1;
 }
