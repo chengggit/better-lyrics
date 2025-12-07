@@ -22,7 +22,7 @@ try {
     throw new Error("Version not found in package.json");
   }
 
-  const semverMatch = version.match(/^(\d+\.\d+\.\d+)(\.\d+)?/);
+  const semverMatch = version.match(/^(\d+\.\d+\.\d+)\.?(\d+)?/);
   if (!semverMatch) {
     throw new Error(`Invalid SemVer version: ${version}`);
   }
@@ -32,7 +32,8 @@ try {
 
   const remainder = version.slice(semverMatch[0].length);
   // friendlyVersion is just the 3-digit first capture group (e.g., "1.2.3")
-  let friendlyVersion = semverMatch[1] + remainder;
+  let friendlyVersion = semverMatch[1] + remainder + " " + (semverMatch[2] || "");
+  friendlyVersion = friendlyVersion.trim();
 
   console.log(`Bumping version to ${version}`);
   console.log(`  SemVer (4-digit): ${semverVersion}`);
