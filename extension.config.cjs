@@ -30,6 +30,10 @@ module.exports = {
     },
   },
   output: {
-    publicPath: "chrome-extension://effdbpeggelllpfkjppbokhmmiinhlmg/",
+		publicPath: "chrome-extension://effdbpeggelllpfkjppbokhmmiinhlmg/",
   },
+	config: (config) => {
+    config.devtool = config.mode === "production" ? false : "source-map";
+    return config;
+  }
 };
