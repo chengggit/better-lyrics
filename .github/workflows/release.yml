@@ -69,6 +69,8 @@ jobs:
 
       - name: Build extension
         run: npm run build
+        env:
+          RELEASE_TYPE: ${{ github.event.inputs.is_canary == 'true' && 'canary' || '' }}
 
       # https://github.com/planetscale/ghcommit-action/issues/43#issuecomment-2313129696
       - name: Stage all changes
