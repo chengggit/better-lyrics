@@ -79,13 +79,9 @@ try {
   }
 
   // Run biome
-  try {
-    console.log("Running biome...");
-    execSync("npx @biomejs/biome@2.0.4 lint --fix", { stdio: "inherit" });
-    execSync("npx @biomejs/biome@2.0.4 format --fix", { stdio: "inherit" });
-  } catch {
-    console.log("Biome not available, skipping lint/format");
-  }
+  console.log("Running biome...");
+  execSync("npx @biomejs/biome lint --fix");
+  execSync("npx @biomejs/biome format --fix");
 
   console.log("Version bump complete.");
 } catch (error) {
