@@ -819,6 +819,7 @@ ytmusic-app-layout[player-fullscreened] .autoscroll-resume-wrapper {
 	left: 50%;
 	transform: translateX(-50%);
 	z-index: 1000;
+	width: fit-content;
 }
 
 ytmusic-app-layout[player-fullscreened] .autoscroll-resume-button {
