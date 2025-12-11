@@ -8,6 +8,39 @@ import * as Utils from "@utils";
 import { animEngineState, getResumeScrollElement, animationEngine } from "@modules/ui/animationEngine";
 
 /**
+ * Manages the Wake Lock API to prevent the screen from dimming or locking.
+ * Requests a wake lock and re-requests it if released due to visibility changes.
+ */
+let wakeLock: WakeLockSentinel | null = null;
+
+async function requestWakeLock(): Promise<void> {
+  if (!("wakeLock" in navigator)) {
+    Utils.log(Constants.GENERAL_ERROR_LOG, "Wake Lock API not supported in this browser.");
+    return;
+  }
+
+  try {
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", () => {
+      wakeLock = null;
+    });
+  } catch (err) {
+    Utils.log(Constants.GENERAL_ERROR_LOG, "Wake Lock request failed:", err);
+  }
+}
+
+function handleVisibilityChange(): void {
+  if (document.visibilityState === "visible" && wakeLock === null) {
+    requestWakeLock();
+  }
+}
+
+export function initWakeLock(): void {
+  requestWakeLock();
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+}
+
+/**
  * Enables the lyrics tab and prevents it from being disabled by YouTube Music.
  * Sets up a MutationObserver to watch for attribute changes.
  */

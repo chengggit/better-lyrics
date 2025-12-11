@@ -2,14 +2,14 @@ import * as Utils from "@utils";
 import * as Constants from "@constants";
 import { cachedDurations, cachedProperties } from "@modules/ui/animationEngine";
 
-async function decompressCSS(css: string): Promise<string> {
-  if (!css.startsWith("__COMPRESSED__")) {
-    return css;
+async function decompress(data: string): Promise<string> {
+  if (!data.startsWith("__COMPRESSED__")) {
+    return data;
   }
 
   try {
     if (typeof DecompressionStream !== "undefined") {
-      const base64 = css.substring("__COMPRESSED__".length);
+      const base64 = data.substring("__COMPRESSED__".length);
       const binaryString = atob(base64);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
@@ -23,7 +23,7 @@ async function decompressCSS(css: string): Promise<string> {
   } catch (error) {
     Utils.log(Constants.GENERAL_ERROR_LOG, "Decompression failed:", error);
   }
-  return css.substring("__COMPRESSED__".length);
+  return data.substring("__COMPRESSED__".length);
 }
 
 async function loadChunkedCSS(): Promise<string | null> {
@@ -87,7 +87,7 @@ export async function getAndApplyCustomCSS(): Promise<void> {
 
     if (css) {
       if (isCompressed || css.startsWith("__COMPRESSED__")) {
-        css = await decompressCSS(css);
+        css = await decompress(css);
       }
       Utils.applyCustomCSS(css);
     }
@@ -99,7 +99,7 @@ export async function getAndApplyCustomCSS(): Promise<void> {
         const syncData = await chrome.storage.sync.get("cssCompressed");
         let css = chunkedCSS;
         if (syncData.cssCompressed || css.startsWith("__COMPRESSED__")) {
-          css = await decompressCSS(css);
+          css = await decompress(css);
         }
         Utils.applyCustomCSS(css);
         return;
@@ -109,7 +109,7 @@ export async function getAndApplyCustomCSS(): Promise<void> {
       if (localData.customCSS) {
         let css = localData.customCSS;
         if (localData.cssCompressed || css.startsWith("__COMPRESSED__")) {
-          css = await decompressCSS(css);
+          css = await decompress(css);
         }
         Utils.applyCustomCSS(css);
         return;
@@ -119,7 +119,7 @@ export async function getAndApplyCustomCSS(): Promise<void> {
       if (syncData.customCSS) {
         let css = syncData.customCSS;
         if (syncData.cssCompressed || css.startsWith("__COMPRESSED__")) {
-          css = await decompressCSS(css);
+          css = await decompress(css);
         }
         Utils.applyCustomCSS(css);
       }
@@ -140,7 +140,7 @@ export function subscribeToCustomCSS(): void {
       if (changes.customCSS.newValue) {
         let css = changes.customCSS.newValue;
         if (css.startsWith("__COMPRESSED__")) {
-          css = await decompressCSS(css);
+          css = await decompress(css);
         }
         Utils.applyCustomCSS(css);
       }
@@ -166,6 +166,10 @@ export async function getTransientStorage(key: string): Promise<any | null> {
     if (expiry && Date.now() > expiry) {
       await chrome.storage.local.remove(key);
       return null;
+    }
+
+    if (typeof value === "string" && value.startsWith("__COMPRESSED__")) {
+      return await decompress(value);
     }
 
     return value;

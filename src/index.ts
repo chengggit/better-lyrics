@@ -87,6 +87,7 @@ export async function modify(): Promise<void> {
   Observer.enableLyricsTab();
   Settings.hideCursorOnIdle();
   Settings.handleSettings();
+  Observer.initWakeLock();
   Settings.loadTranslationSettings();
   Storage.subscribeToCustomCSS();
   await Storage.purgeExpiredKeys();
