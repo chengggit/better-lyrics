@@ -61,8 +61,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          rm -rf node_modules package-lock.json
           npm install
+          npm install @biomejs/cli-linux-x64@2.0.4 @rspack/binding-linux-x64-gnu@1.5.8
 
       - name: Run Typescript
         run: npm run typecheck
