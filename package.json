@@ -11,7 +11,7 @@
         "build": "extension build --browser all --polyfill",
         "build:zip": "extension build --browser all --polyfill --zip",
         "preview": "extension preview --polyfill",
-        "lint": "npx @biomejs/biome lint --write . && npx @biomejs/biome format --write .",
+        "lint": "biome lint --write . && biome format --write .",
         "update-version": "tsx tooling/update-version.ts",
         "typecheck": "tsc --noEmit"
     },
