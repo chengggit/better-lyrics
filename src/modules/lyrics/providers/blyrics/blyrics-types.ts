@@ -71,6 +71,7 @@ interface DivAttributes {
   "@_begin"?: string;
   "@_end"?: string;
   "@_songPart": string;
+  "@_key"?: string;
   "@_agent"?: string;
 }
 

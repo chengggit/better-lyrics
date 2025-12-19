@@ -155,6 +155,7 @@ export async function fillTtml(responseString: string, providerParameters: Provi
     }
 
     lyrics.push({
+      key: meta?.["@_key"],
       agent: meta?.["@_agent"],
       durationMs: endTimeMs - beginTimeMs,
       parts: partParse.parts,
@@ -179,15 +180,16 @@ export async function fillTtml(responseString: string, providerParameters: Provi
       translations.translations[0].translation.forEach(translation => {
         let text = translation.text[0]["#text"];
         let line = translation[":@"]["@_for"];
-
-        if (lang && text && line && line.startsWith("L")) {
-          let lineIndex = Number(line.substring(1)) - 1;
-          if (lineIndex < lyrics.length) {
-            lyrics[lineIndex].translation = {
-              text,
-              lang,
-            };
-          }
+        
+        if (lang && text && line) {
+          lyrics.forEach((lyricLine, lyricIndex) => {
+            if (lyricLine.key == line) {
+              lyrics[lyricIndex].translation = {
+                text,
+                lang,
+              }
+            }
+          })
         }
       });
     }
@@ -195,15 +197,16 @@ export async function fillTtml(responseString: string, providerParameters: Provi
     if (transliterations && transliterations.transliterations && transliterations.transliterations.length > 0) {
       transliterations.transliterations[0].transliteration.forEach(transliteration => {
         let line = transliteration[":@"]["@_for"];
-        if (line && line.startsWith("L")) {
-          let lineIndex = Number(line.substring(1)) - 1;
-          if (lineIndex < lyrics.length) {
-            let beginTime = lyrics[lineIndex].startTimeMs;
-            let parseResult = parseLyricPart(transliteration.text, beginTime, false);
+        if (line) {
+          lyrics.forEach((lyricLine, lyricIndex) => {
+            if (lyricLine.key == line) {
+              let beginTime = lyrics[lyricIndex].startTimeMs;
+              let parseResult = parseLyricPart(transliteration.text, beginTime, false);
 
-            lyrics[lineIndex].romanization = parseResult.text;
-            lyrics[lineIndex].timedRomanization = parseResult.parts;
-          }
+              lyrics[lyricIndex].romanization = parseResult.text;
+              lyrics[lyricIndex].timedRomanization = parseResult.parts;
+            }
+          })
         }
       });
     }
