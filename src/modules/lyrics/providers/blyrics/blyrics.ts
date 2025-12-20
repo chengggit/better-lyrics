@@ -35,8 +35,8 @@ function parseLyricPart(p: ParagraphElementOrBackground[], beginTime: number, ig
         });
       } else if (subPart.span) {
         let spanText = subPart.span[0]["#text"]!;
-        let startTimeMs = parseTime(subPart[":@"]["@_begin"]);
-        let endTimeMs = parseTime(subPart[":@"]["@_end"]);
+        let startTimeMs = parseTime(subPart[":@"]?.["@_begin"]);
+        let endTimeMs = parseTime(subPart[":@"]?.["@_end"]);
 
         parts.push({
           startTimeMs,
@@ -133,12 +133,21 @@ export async function fillTtml(responseString: string, providerParameters: Provi
 
   const lines = ttBody.flatMap(e => e.div);
 
+  const hasTimingData = lines.length > 0 && lines[0][":@"] !== undefined;
+  if (!hasTimingData) {
+    providerParameters.sourceMap["bLyrics-richsynced"].lyricSourceResult = null;
+    providerParameters.sourceMap["bLyrics-richsynced"].filled = true;
+    providerParameters.sourceMap["bLyrics-synced"].lyricSourceResult = null;
+    providerParameters.sourceMap["bLyrics-synced"].filled = true;
+    return;
+  }
+
   let isWordSynced = false;
 
   lines.forEach(line => {
     let meta = line[":@"];
-    let beginTimeMs = parseTime(meta["@_begin"]);
-    let endTimeMs = parseTime(meta["@_end"]);
+    let beginTimeMs = parseTime(meta?.["@_begin"]);
+    let endTimeMs = parseTime(meta?.["@_end"]);
 
     let partParse = parseLyricPart(line.p, beginTimeMs);
     if (partParse.isWordSynced) {
@@ -146,7 +155,7 @@ export async function fillTtml(responseString: string, providerParameters: Provi
     }
 
     lyrics.push({
-      agent: meta["@_agent"],
+      agent: meta?.["@_agent"],
       durationMs: endTimeMs - beginTimeMs,
       parts: partParse.parts,
       startTimeMs: beginTimeMs,
