@@ -462,6 +462,9 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
 
   lyricsContainer.dataset.sync = syncType;
   lyricsContainer.dataset.loaderVisible = String(keepLoaderVisible);
+  if (lyrics[0].words === Constants.NO_LYRICS_TEXT) {
+    lyricsContainer.dataset.noLyrics = "true";
+  }
 
   let lyricsData = {
     lines: lines,
