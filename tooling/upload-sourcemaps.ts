@@ -21,7 +21,7 @@ const version = packageJson.version;
 async function uploadFile(filePath: string) {
   const fileName = path.basename(filePath);
   const fileContent = fs.readFileSync(filePath);
-  
+
   // Construct the URL: /<browser>/v<version>/<filename>
   const url = `${SOURCEMAPS_BASE_URL}/${browser}/v${version}/${fileName}`;
 
@@ -36,7 +36,9 @@ async function uploadFile(filePath: string) {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to upload ${fileName}: ${response.status} ${response.statusText} - ${await response.text()}`);
+      throw new Error(
+        `Failed to upload ${fileName}: ${response.status} ${response.statusText} - ${await response.text()}`
+      );
     }
 
     console.log(`Successfully uploaded ${fileName} to API.`);
