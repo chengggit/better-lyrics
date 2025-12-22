@@ -89,7 +89,7 @@ export async function modify(): Promise<void> {
   Observer.setupHomepageFullscreenHandler();
   Settings.hideCursorOnIdle();
   Settings.handleSettings();
-  Observer.initWakeLock();
+  Observer.setupWakeLockForFullscreen();
   Settings.loadTranslationSettings();
   Storage.subscribeToCustomCSS();
   await Storage.purgeExpiredKeys();
