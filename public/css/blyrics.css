@@ -201,6 +201,11 @@
 .blyrics--word.blyrics--animating {
 	animation: blyrics-wobble var(--blyrics-wobble-duration) forwards ease;
 	animation-delay: var(--blyrics-anim-delay);
+	animation-play-state: running;
+}
+
+.blyrics--word.blyrics--animating.blyrics--paused {
+	animation-play-state: paused;
 }
 
 @property --lyric-transition-amount-start {
@@ -270,6 +275,7 @@
 	animation: blyrics-glow max(calc(var(--blyrics-duration) * 1.2), 1.2s)
 		forwards ease;
 	animation-delay: var(--blyrics-anim-delay);
+	animation-play-state: running;
 
 	--lyric-transition-amount-start: 1.4;
 	--lyric-transition-amount-end: 1.5;
@@ -283,6 +289,16 @@
 		var(--blyrics-swipe-delay), var(--blyrics-swipe-delay),
 		var(--blyrics-anim-delay);
 }
+
+.blyrics--word.blyrics--animating.blyrics--paused::after {
+	transition-duration: 100000000s, 100000000s, 100000000s;
+	/* Set new values to update the transition */
+	--lyric-transition-amount-start: 10;
+	--lyric-transition-amount-end: 10;
+	opacity: 0.5;
+	animation-play-state: paused;
+}
+
 
 .blyrics-rtl {
 	direction: rtl;
