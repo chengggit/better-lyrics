@@ -2,6 +2,7 @@ import * as Constants from "@constants";
 import { BACKGROUND_LYRIC_CLASS } from "@constants";
 import * as DOM from "@modules/ui/dom";
 import * as Utils from "@utils";
+import { getRelativeBounds } from "@utils";
 import type { TranslationResult } from "@modules/lyrics/translation";
 import * as Translation from "@modules/lyrics/translation";
 import { containsNonLatin, testRtl } from "@modules/lyrics/lyricParseUtils";
@@ -9,7 +10,22 @@ import { AppState } from "@/index";
 import { applySegmentMapToLyrics, type LyricSourceResultWithMeta } from "@modules/lyrics/lyrics";
 import type { Lyric, LyricPart } from "@modules/lyrics/providers/shared";
 import { animEngineState, lyricsElementAdded } from "@modules/ui/animationEngine";
-import { getRelativeBounds } from "@utils";
+import { createInstrumentalElement } from "@modules/lyrics/createInstrumentalElement";
+
+// Finds the nearest non-instrumental lyric's agent, looks both ways :)
+function findNearestAgent(lyrics: Lyric[], fromIndex: number): string | undefined {
+  for (let i = fromIndex - 1; i >= 0; i--) {
+    if (!lyrics[i].isInstrumental && lyrics[i].agent) {
+      return lyrics[i].agent;
+    }
+  }
+  for (let i = fromIndex + 1; i < lyrics.length; i++) {
+    if (!lyrics[i].isInstrumental && lyrics[i].agent) {
+      return lyrics[i].agent;
+    }
+  }
+  return undefined;
+}
 
 const resizeObserver = new ResizeObserver(entries => {
   for (const entry of entries) {
@@ -33,6 +49,12 @@ export interface PartData {
   duration: number;
   lyricElement: HTMLElement;
   animationStartTimeMs: number;
+}
+
+export interface InstrumentalElements {
+  waveClip: SVGElement;
+  wavePath: SVGElement;
+  fill: SVGElement;
 }
 
 export type LineData = {
@@ -222,6 +244,53 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
   let syncType: SyncType = allZero ? "none" : "synced";
 
   lyrics.forEach((lyricItem, lineIndex) => {
+    if (lyricItem.isInstrumental) {
+      const instrumentalElement = createInstrumentalElement(lyricItem.durationMs, lineIndex);
+      instrumentalElement.classList.add("blyrics--line");
+      instrumentalElement.dataset.time = String(lyricItem.startTimeMs / 1000);
+      instrumentalElement.dataset.duration = String(lyricItem.durationMs / 1000);
+      instrumentalElement.dataset.lineNumber = String(lineIndex);
+      instrumentalElement.dataset.instrumental = "true";
+
+      const agent = findNearestAgent(lyrics, lineIndex);
+      if (agent) {
+        instrumentalElement.dataset.agent = agent;
+      }
+
+      if (!allZero) {
+        instrumentalElement.setAttribute(
+          "onClick",
+          `const player = document.getElementById("movie_player"); player.seekTo(${lyricItem.startTimeMs / 1000}, true);player.playVideo();`
+        );
+        instrumentalElement.addEventListener("click", () => {
+          animEngineState.scrollResumeTime = 0;
+        });
+      }
+
+      const line: LineData = {
+        lyricElement: instrumentalElement,
+        time: lyricItem.startTimeMs / 1000,
+        duration: lyricItem.durationMs / 1000,
+        parts: [],
+        isScrolled: false,
+        animationStartTimeMs: Infinity,
+        isAnimationPlayStatePlaying: false,
+        accumulatedOffsetMs: 0,
+        isAnimating: false,
+        isSelected: false,
+        height: -1,
+        position: -1,
+      };
+
+      try {
+        lines.push(line);
+        lyricsContainer.appendChild(instrumentalElement);
+      } catch (_err) {
+        Utils.log(Constants.LYRICS_WRAPPER_NOT_VISIBLE_LOG);
+      }
+      return;
+    }
+
     if (!lyricItem.parts) {
       lyricItem.parts = [];
     }
@@ -497,7 +566,7 @@ export function calculateLyricPositions() {
 
     data.lyricWidth = lyricsElement.clientWidth;
 
-    data.lines.forEach((line, i) => {
+    data.lines.forEach(line => {
       let bounds = getRelativeBounds(lyricsElement, line.lyricElement);
       line.position = bounds.y;
       line.height = bounds.height;

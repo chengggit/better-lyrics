@@ -86,6 +86,18 @@ Override these variables in custom CSS to create themes:
 }
 ```
 
+### Instrumental Breaks
+
+```css
+.blyrics--instrumental {
+  --blyrics-duration: 5000ms;    /* Set by extension (break duration) */
+}
+.blyrics--instrumental-icon {
+  height: var(--blyrics-font-size);
+  width: calc(var(--blyrics-font-size) + var(--blyrics-font-size) / 3);
+}
+```
+
 ## DOM Structure
 
 ```
@@ -98,6 +110,12 @@ Override these variables in custom CSS to create themes:
 │   └── .blyrics-background-lyric (span) - background vocals
 ├── .blyrics--line.blyrics--animating (active line)
 │   └── .blyrics--word.blyrics--animating (animating word)
+├── .blyrics--instrumental.blyrics--line (div) [data-instrumental="true"] [data-agent="v1|v2|v3|v1000"]
+│   └── .blyrics--instrumental-icon (svg) - animated music note
+│       ├── .blyrics--instrumental-bg (path) - background (inactive color)
+│       ├── .blyrics--instrumental-fill (path) - fill (active color)
+│       ├── .blyrics--wave-clip (clipPath) - clip for fill animation
+│       └── .blyrics--wave-path (path) - animated wave inside clip
 ├── .blyrics--translated (span) - translation
 ├── .blyrics--romanized (span) - romanization
 └── .blyrics-footer
@@ -127,6 +145,12 @@ Override these variables in custom CSS to create themes:
 | `[data-agent="v2"]`       | Secondary voice (right-aligned)                                             |
 | `[data-agent="v3"]`       | Tertiary voice (right-aligned)                                              |
 | `[data-agent="v1000"]`    | Both speakers simultaneously (duet/chorus, centered)                        |
+| `.blyrics--instrumental`      | Instrumental break container (also has `.blyrics--line`, supports `data-agent`) |
+| `.blyrics--instrumental-icon` | SVG music note icon inside instrumental break                                   |
+| `.blyrics--instrumental-bg`   | Background path of music note (uses inactive color)                             |
+| `.blyrics--instrumental-fill` | Fill path of music note (uses active color)                                     |
+| `.blyrics--wave-clip`         | ClipPath for fill animation                                                     |
+| `.blyrics--wave-path`         | Animated wave path inside clip                                                  |
 
 ## Animation System
 
@@ -325,6 +349,26 @@ ytmusic-player-page::before {
 :root {
   --blyrics-lyric-inactive-color: oklch(1 0 0/0.35);
   --blyrics-lyric-active-color: oklch(1 0 0/1);
+}
+```
+
+### Pattern 13: Instrumental Break Customization
+
+Instrumental breaks are always visible and styled like regular lyrics lines. They inherit `data-agent` from surrounding lines for proper alignment:
+
+```css
+/* Custom icon size (independent of font size) */
+.blyrics--instrumental-icon {
+  width: 4rem;
+  height: 4rem;
+}
+
+/* Custom background/fill colors */
+.blyrics--instrumental-bg {
+  fill: rgba(255, 255, 255, 0.3);
+}
+.blyrics--instrumental-fill {
+  fill: rgba(255, 255, 255, 1);
 }
 ```
 

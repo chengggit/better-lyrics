@@ -205,10 +205,9 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
       if (!isPlaying) {
         setUpAnimationEarlyTime = 0;
       }
-      if (
-        currentTime + setUpAnimationEarlyTime >= time &&
-        (currentTime < nextTime || currentTime < time + lineData.duration + 0.05)
-      ) {
+
+      const effectiveEndTime = Math.max(nextTime, time + lineData.duration + 0.05);
+      if (currentTime + setUpAnimationEarlyTime >= time && currentTime < effectiveEndTime) {
         lineData.isSelected = true;
 
         const timeDelta = currentTime - time;
@@ -229,6 +228,7 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
             const timeDelta = currentTime - elTime;
 
             part.lyricElement.classList.remove(Constants.ANIMATING_CLASS);
+            part.lyricElement.classList.remove(Constants.PAUSED_CLASS);
 
             //correct for the animation not starting at 0% and instead at -10%
             const swipeAnimationDelay = -timeDelta - elDuration * 0.1 + "s";
@@ -249,12 +249,13 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
         if (isPlaying !== lineData.isAnimationPlayStatePlaying) {
           lineData.isAnimationPlayStatePlaying = isPlaying;
           if (!isPlaying) {
-            lineData.isSelected = false;
             const children = [lineData, ...lineData.parts];
             children.forEach(part => {
               if (part.animationStartTimeMs > now) {
                 part.lyricElement.classList.remove(Constants.ANIMATING_CLASS);
                 part.lyricElement.classList.remove(Constants.PRE_ANIMATING_CLASS);
+              } else {
+                part.lyricElement.classList.add(Constants.PAUSED_CLASS);
               }
             });
           }
@@ -267,8 +268,10 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
             part.lyricElement.style.setProperty("--blyrics-anim-delay", "");
             part.lyricElement.classList.remove(Constants.ANIMATING_CLASS);
             part.lyricElement.classList.remove(Constants.PRE_ANIMATING_CLASS);
+            part.lyricElement.classList.remove(Constants.PAUSED_CLASS);
             part.animationStartTimeMs = Infinity;
           });
+
           lineData.isSelected = false;
           lineData.isAnimating = false;
         }

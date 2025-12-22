@@ -46,10 +46,11 @@
 	- [14. Footer and Social Elements](#14-footer-and-social-elements)
 	- [15. ThemeSong Compatibility](#15-themesong-compatibility)
 	- [16. Translated and Romanized Lyrics](#16-translated-and-romanized-lyrics)
-	- [17. Autoscroll Resume Button](#17-autoscroll-resume-button)
-	- [18. Best Practices for Modifying CSS](#18-best-practices-for-modifying-css)
-	- [19. Importing/Exporting Styles](#19-importingexporting-styles)
-	- [20. Additional Resources](#20-additional-resources)
+	- [17. Instrumental Breaks](#17-instrumental-breaks)
+	- [18. Autoscroll Resume Button](#18-autoscroll-resume-button)
+	- [19. Best Practices for Modifying CSS](#19-best-practices-for-modifying-css)
+	- [20. Importing/Exporting Styles](#20-importingexporting-styles)
+	- [21. Additional Resources](#21-additional-resources)
 
 ## 1. Introduction to CSS and Better Lyrics
 
@@ -932,7 +933,131 @@ This CSS feature query detects when ThemeSong is active and adjusts the layout a
 
 Provides distinct styling for translated lyrics and romanized text, with romanized text getting a subtle background container.
 
-## 17. Autoscroll Resume Button
+## 17. Instrumental Breaks
+
+Better Lyrics detects instrumental breaks (intros, outros, and mid-song gaps) and displays an animated music note icon. Instrumental breaks are always visible and styled like regular lyrics lines, inheriting `data-agent` from surrounding lines for proper alignment.
+
+### Instrumental Break Structure
+
+```html
+<div class="blyrics--instrumental blyrics--line" data-instrumental="true" data-time="0" data-duration="33" data-agent="v1">
+  <svg class="blyrics--instrumental-icon" viewBox="0 0 24 24">
+    <defs>
+      <filter id="blyrics-glow-...">...</filter>
+      <clipPath id="blyrics-wave-clip-..." class="blyrics--wave-clip">
+        <path class="blyrics--wave-path" d="..." />
+      </clipPath>
+    </defs>
+    <path class="blyrics--instrumental-bg" d="..." />
+    <g filter="url(#blyrics-glow-...)">
+      <path class="blyrics--instrumental-fill" clip-path="url(#blyrics-wave-clip-...)" d="..." />
+    </g>
+  </svg>
+</div>
+```
+
+### Instrumental CSS Variables
+
+| Variable             | Default Value | Description                                    |
+| -------------------- | ------------- | ---------------------------------------------- |
+| `--blyrics-duration` | (dynamic)     | Duration of the break in ms (set by extension) |
+
+### Instrumental Classes
+
+| Class                         | Purpose                                               |
+| ----------------------------- | ----------------------------------------------------- |
+| `.blyrics--instrumental`      | Base container for instrumental breaks (also has `.blyrics--line`) |
+| `.blyrics--instrumental-icon` | The SVG music note icon                                            |
+| `.blyrics--instrumental-bg`   | Background path of the music note (uses inactive color)            |
+| `.blyrics--instrumental-fill` | Fill path of the music note (uses active color)                    |
+| `.blyrics--wave-clip`         | ClipPath for the fill animation                                    |
+| `.blyrics--wave-path`         | Animated wave path inside the clip                                 |
+
+### Instrumental Animation
+
+The instrumental break uses two keyframe animations:
+
+```css
+/* Wave animation - continuous oscillation */
+@keyframes blyrics-wave {
+  0%, 100% {
+    d: path("M -4 3 Q 1 2 5 3 Q 10 4 14 3 Q 18 2 22 3 Q 26 4 30 3 L 30 30 L -4 30 Z");
+  }
+  50% {
+    d: path("M -4 3 Q 1 4 5 3 Q 10 2 14 3 Q 18 4 22 3 Q 26 2 30 3 L 30 30 L -4 30 Z");
+  }
+}
+
+/* Rise animation - fills the icon from bottom to top */
+@keyframes blyrics-rise {
+  0% { transform: translateY(80%); }
+  100% { transform: translateY(-10%); }
+}
+```
+
+### Styling Instrumental Breaks
+
+Instrumental breaks are always visible and styled like regular lyrics lines. They have the `.blyrics--line` class and support `data-agent` for alignment (v1, v2, v3, v1000). The icon uses `--blyrics-lyric-inactive-color` for the background and `--blyrics-lyric-active-color` for the fill:
+
+```css
+.blyrics--instrumental-icon {
+  height: var(--blyrics-font-size);
+  width: calc(var(--blyrics-font-size) + var(--blyrics-font-size) / 3);
+  overflow: visible;
+  margin-left: calc(var(--blyrics-font-size) / -3);
+}
+
+/* Right-aligned for secondary/tertiary vocals */
+.blyrics--instrumental[data-agent="v2"] .blyrics--instrumental-icon,
+.blyrics--instrumental[data-agent="v3"] .blyrics--instrumental-icon {
+  margin-left: 0;
+  margin-right: calc(var(--blyrics-font-size) / -3);
+}
+
+/* Centered for duets */
+.blyrics--instrumental[data-agent="v1000"] .blyrics--instrumental-icon {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.blyrics--instrumental-bg {
+  fill: var(--blyrics-lyric-inactive-color);
+}
+
+.blyrics--instrumental-fill {
+  fill: var(--blyrics-lyric-active-color);
+}
+```
+
+To customize instrumental breaks:
+
+```css
+/* Change the icon size (independent of font size) */
+.blyrics--instrumental-icon {
+  width: 4rem;
+  height: 4rem;
+}
+
+/* Custom background/fill colors */
+.blyrics--instrumental-bg {
+  fill: rgba(255, 255, 255, 0.3);
+}
+.blyrics--instrumental-fill {
+  fill: rgba(255, 255, 255, 1);
+}
+```
+
+### Data Attributes
+
+| Attribute           | Description                                        |
+| ------------------- | -------------------------------------------------- |
+| `data-instrumental` | `"true"` indicates this is an instrumental         |
+| `data-time`         | Start time of the break in seconds                 |
+| `data-duration`     | Duration of the break in seconds                   |
+| `data-line-number`  | Index of this element in the lyrics array          |
+| `data-agent`        | Voice alignment: `"v1"`, `"v2"`, `"v3"`, `"v1000"` |
+
+## 18. Autoscroll Resume Button
 
 ```css
 .autoscroll-resume-button {
@@ -971,7 +1096,7 @@ Provides distinct styling for translated lyrics and romanized text, with romaniz
 
 Creates an elegant button that appears when autoscroll is paused, with smooth show/hide transitions.
 
-## 18. Best Practices for Modifying CSS
+## 19. Best Practices for Modifying CSS
 
 When modifying this CSS:
 
@@ -986,7 +1111,7 @@ When modifying this CSS:
 9. **Consider performance** - Avoid overly complex animations that might cause lag
 10. **Have fun** - CSS is about creativity and expression!
 
-## 19. Importing/Exporting Styles
+## 20. Importing/Exporting Styles
 
 The Better Lyrics extension allows you to import and export custom CSS styles for sharing and backup purposes.
 
@@ -1005,7 +1130,7 @@ The Better Lyrics extension allows you to import and export custom CSS styles fo
 
 Share your custom themes with the [Better Lyrics community on Discord](https://discord.gg/UsHE3d5fWF) and get featured in the extension!
 
-## 20. Additional Resources
+## 21. Additional Resources
 
 To learn more about CSS and web development:
 

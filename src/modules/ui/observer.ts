@@ -14,6 +14,80 @@ import {
 } from "@modules/ui/navigation";
 
 /**
+ * Manages the Wake Lock API to prevent the screen from dimming or locking.
+ * Requests a wake lock and re-requests it if released due to visibility changes.
+ */
+let wakeLock: WakeLockSentinel | null = null;
+
+async function requestWakeLock(): Promise<void> {
+  if (!("wakeLock" in navigator)) {
+    Utils.log(Constants.GENERAL_ERROR_LOG, "Wake Lock API not supported in this browser.");
+    return;
+  }
+
+  try {
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", () => {
+      wakeLock = null;
+    });
+  } catch (err) {
+    Utils.log(Constants.GENERAL_ERROR_LOG, "Wake Lock request failed:", err);
+  }
+}
+
+function handleVisibilityChange(): void {
+  if (document.visibilityState === "visible" && wakeLock === null) {
+    requestWakeLock();
+  }
+}
+
+export function initWakeLock(): void {
+  requestWakeLock();
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+}
+
+export function cleanupWakeLock(): void {
+  if (wakeLock) {
+    wakeLock.release();
+    wakeLock = null;
+  }
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+}
+
+type FullscreenCallback = () => void;
+
+export function onFullscreenChange(onEnter: FullscreenCallback, onExit: FullscreenCallback): void {
+  const appLayout = document.querySelector("ytmusic-app-layout");
+  if (!appLayout) {
+    setTimeout(() => onFullscreenChange(onEnter, onExit), 1000);
+    return;
+  }
+
+  let wasFullscreen = appLayout.hasAttribute("player-fullscreened");
+
+  const observer = new MutationObserver(() => {
+    const isFullscreen = appLayout.hasAttribute("player-fullscreened");
+
+    if (!wasFullscreen && isFullscreen) {
+      onEnter();
+    } else if (wasFullscreen && !isFullscreen) {
+      onExit();
+    }
+
+    wasFullscreen = isFullscreen;
+  });
+
+  observer.observe(appLayout, { attributes: true, attributeFilter: ["player-fullscreened"] });
+}
+
+export function setupWakeLockForFullscreen(): void {
+  onFullscreenChange(
+    () => initWakeLock(),
+    () => cleanupWakeLock()
+  );
+}
+
+/**
  * Enables the lyrics tab and prevents it from being disabled by YouTube Music.
  * Sets up a MutationObserver to watch for attribute changes.
  */

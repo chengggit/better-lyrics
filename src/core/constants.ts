@@ -10,6 +10,7 @@ export const RTL_CLASS: string = "blyrics-rtl";
 export const WORD_CLASS: string = "blyrics--word";
 export const BACKGROUND_LYRIC_CLASS = "blyrics-background-lyric";
 export const ANIMATING_CLASS: string = "blyrics--animating";
+export const PAUSED_CLASS: string = "blyrics--paused";
 export const PRE_ANIMATING_CLASS: string = "blyrics--pre-animating";
 export const USER_SCROLLING_CLASS: string = "blyrics-user-scrolling";
 export const TRANSLATED_LYRICS_CLASS: string = "blyrics--translated";
@@ -165,6 +166,7 @@ export const NO_LYRICS_TEXT: string = "No lyrics found for this song";
 export const MUSIC_NOTES: string = "♪𝅘𝅥𝅮𝅘𝅥𝅯𝅘𝅥𝅰𝅘𝅥𝅱𝅘𝅥𝅲";
 
 export const DEFAULT_LINE_SYNCED_WORD_DELAY_MS = 50;
+export const BLYRICS_INSTRUMENTAL_GAP_MS = 5000;
 
 export const PLAYER_BAR_SELECTOR: string = "ytmusic-player-bar";
 export const AD_PLAYING_ATTR: string = "is-advertisement";
