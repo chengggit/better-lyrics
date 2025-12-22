@@ -102,6 +102,7 @@ export async function createLyrics(detail: PlayerDetails, signal: AbortSignal): 
     DOM.renderLoader(); // Only render the loader after we've checked the cache & we're not switching between audio and video
     Translation.clearCache();
     matchingSong = await RequestSniffer.getMatchingSong(videoId);
+    segmentMap = matchingSong?.segmentMap || null;
     AppState.areLyricsLoaded = false;
     AppState.areLyricsTicking = false;
   }
