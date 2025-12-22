@@ -2,6 +2,10 @@ module.exports = {
   dev: {
     browser: "chrome",
   },
+  config: (config) => {
+    config.devtool = "source-map";
+    return config;
+  },
   browser: {
     chrome: {
       preferences: { theme: "dark" },
