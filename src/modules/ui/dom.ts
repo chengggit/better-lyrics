@@ -513,7 +513,7 @@ export function addNoLyricsButton(song: string, artist: string, album: string, d
 
   const geniusSearch = document.createElement("button");
   geniusSearch.className = "blyrics-no-lyrics-button";
-  geniusSearch.textContent = "Try search on Genius";
+  geniusSearch.textContent = "Search on Genius";
 
   geniusSearch.addEventListener("click", () => {
     window.open(geniusSearchUrl, "_blank");
