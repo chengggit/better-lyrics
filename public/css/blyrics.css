@@ -770,14 +770,14 @@
 
 .blyrics--instrumental.blyrics--pre-animating:not(.blyrics--animating) .blyrics--wave-clip {
 	animation: none;
-	transform: translateY(80%);
+	transform: translateY(78%);
 }
 
 .blyrics--instrumental.blyrics--animating .blyrics--wave-clip {
 	transition-property: transform;
-	transition-duration: calc(var(--blyrics-duration, 1ms) * 1.75); /* 1.75 looks best to me */
+	transition-duration: calc(var(--blyrics-duration, 1ms) * 1.25);
 	transition-delay: var(--blyrics-anim-delay);
-	transform: translateY(-10%);
+	transform: translateY(-3.25%);
 }
 
 .blyrics--paused .blyrics--wave-clip {
