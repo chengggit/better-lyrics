@@ -188,6 +188,11 @@
 	transform: translateY(0px);
 }
 
+.blyrics--line.blyrics--pre-animating,
+.blyrics--line.blyrics--pre-animating .blyrics--word {
+	will-change: transform;
+}
+
 [blyrics-alt-hover] .blyrics--word:hover {
 	text-decoration: underline;
 	text-underline-offset: 0.15em;
