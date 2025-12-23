@@ -220,6 +220,26 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
           // Utils.log("[BetterLyrics] Animation time sync is off, resetting");
         }
 
+        if (isPlaying !== lineData.isAnimationPlayStatePlaying) {
+          lineData.isAnimationPlayStatePlaying = isPlaying;
+          const children = [lineData, ...lineData.parts];
+          if (!isPlaying) {
+            children.forEach(part => {
+              if (part.animationStartTimeMs > now) {
+                part.lyricElement.classList.remove(Constants.ANIMATING_CLASS);
+                part.lyricElement.classList.remove(Constants.PRE_ANIMATING_CLASS);
+              } else {
+                part.lyricElement.classList.add(Constants.PAUSED_CLASS);
+              }
+            });
+          } else {
+            children.forEach(part => {
+              part.lyricElement.classList.remove(Constants.PAUSED_CLASS);
+            });
+            lineData.isAnimating = false; // reset the animation
+          }
+        }
+
         if (!lineData.isAnimating) {
           const children = [lineData, ...lineData.parts];
           children.forEach(part => {
@@ -245,21 +265,6 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
           lineData.isAnimating = true;
           lineData.isAnimationPlayStatePlaying = true;
           lineData.accumulatedOffsetMs = 0;
-        }
-
-        if (isPlaying !== lineData.isAnimationPlayStatePlaying) {
-          lineData.isAnimationPlayStatePlaying = isPlaying;
-          if (!isPlaying) {
-            const children = [lineData, ...lineData.parts];
-            children.forEach(part => {
-              if (part.animationStartTimeMs > now) {
-                part.lyricElement.classList.remove(Constants.ANIMATING_CLASS);
-                part.lyricElement.classList.remove(Constants.PRE_ANIMATING_CLASS);
-              } else {
-                part.lyricElement.classList.add(Constants.PAUSED_CLASS);
-              }
-            });
-          }
         }
       } else {
         if (lineData.isSelected) {
