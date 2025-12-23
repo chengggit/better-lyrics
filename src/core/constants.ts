@@ -47,10 +47,10 @@ export const NOTO_SANS_UNIVERSAL_LINK: string =
   "https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@100..900&family=Noto+Sans+Armenian:wght@100..900&family=Noto+Sans+Bengali:wght@100..900&family=Noto+Sans+Devanagari:wght@100..900&family=Noto+Sans+Georgian:wght@100..900&family=Noto+Sans+Gujarati:wght@100..900&family=Noto+Sans+HK:wght@100..900&family=Noto+Sans+Hebrew:wght@100..900&family=Noto+Sans+JP:wght@100..900&family=Noto+Sans+KR:wght@100..900&family=Noto+Sans+Kannada:wght@100..900&family=Noto+Sans+Khmer:wght@100..900&family=Noto+Sans+Lao+Looped:wght@100..900&family=Noto+Sans+Lao:wght@100..900&family=Noto+Sans+Malayalam:wght@100..900&family=Noto+Sans+Marchen&family=Noto+Sans+Meetei+Mayek:wght@100..900&family=Noto+Sans+Multani&family=Noto+Sans+NKo&family=Noto+Sans+Old+Permic&family=Noto+Sans+SC:wght@100..900&family=Noto+Sans+Shavian&family=Noto+Sans+Sinhala:wght@100..900&family=Noto+Sans+Sunuwar&family=Noto+Sans+TC:wght@100..900&family=Noto+Sans+Takri&family=Noto+Sans+Tamil:wght@100..900&family=Noto+Sans+Telugu:wght@100..900&family=Noto+Sans+Thai+Looped:wght@100..900&family=Noto+Sans+Thai:wght@100..900&family=Noto+Sans+Vithkuqi:wght@400..700&family=Noto+Sans+Warang+Citi&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap";
 
 // API URLs and Functions
-export const LYRICS_API_URL: string = "https://lyrics-api-go-better-lyrics-api-pr-12.up.railway.app/getLyrics";
+export const LYRICS_API_URL: string = "https://lyrics-api.boidu.dev/getLyrics";
 export const DISCORD_INVITE_URL: string = "https://discord.gg/UsHE3d5fWF";
 export const LRCLIB_API_URL: string = "https://lrclib.net/api/get";
-export const LEGATO_API_URL: string = "https://lyrics-api-go-better-lyrics-api-pr-12.up.railway.app/kugou/getLyrics";
+export const LEGATO_API_URL: string = "https://lyrics-api.boidu.dev/kugou/getLyrics";
 export const LRCLIB_UPLOAD_URL: string = "https://lrclibup.boidu.dev/";
 export const LRCLIB_CLIENT_HEADER: string = "BetterLyrics Extension (https://github.com/better-lyrics/better-lyrics)";
 export const TRANSLATE_LYRICS_URL = function (lang: string, text: string): string {
@@ -59,6 +59,10 @@ export const TRANSLATE_LYRICS_URL = function (lang: string, text: string): strin
 export const TRANSLATE_IN_ROMAJI = function (lang: string, text: string): string {
   return `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${lang}&tl=${lang}-Latn&dt=t&dt=rm&q=${encodeURIComponent(text)}`;
 };
+
+export const CUBEY_LYRICS_API_URL_TURNSTILE = "https://lyrics.api.dacubeking.com/";
+
+export const CUBEY_LYRICS_API_URL = "https://go-api-proxy-better-lyrics-cf-api.dacubeking.workers.dev/";
 
 // Supported Languages
 export const romanizationLanguages: string[] = [

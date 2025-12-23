@@ -63,9 +63,6 @@ function handleTurnstile(): Promise<string> {
   });
 }
 
-const CUBEY_LYRICS_API_URL_TURNSTILE = "https://lyrics.api.dacubeking.com/";
-const CUBEY_LYRICS_API_URL = "https://go-api-proxy-better-lyrics-cf-api.dacubeking.workers.dev/";
-
 export type CubeyLyricSourceResult = LyricSourceResult & {
   album: string;
   artist: string;
@@ -76,6 +73,7 @@ export type CubeyLyricSourceResult = LyricSourceResult & {
 import * as Utils from "@core/utils";
 import { lrcFixers, parseLRC, parsePlainLyrics } from "./lrcUtils";
 import { fillTtml } from "@modules/lyrics/providers/blyrics/blyrics";
+import { CUBEY_LYRICS_API_URL, CUBEY_LYRICS_API_URL_TURNSTILE } from "@/core/constants";
 
 /**
  *
