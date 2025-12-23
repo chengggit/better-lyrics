@@ -62,7 +62,7 @@ export const TRANSLATE_IN_ROMAJI = function (lang: string, text: string): string
 
 export const CUBEY_LYRICS_API_URL_TURNSTILE = "https://lyrics.api.dacubeking.com/";
 
-export const CUBEY_LYRICS_API_URL = "https://lyrics.api.dacubeking.com//";
+export const CUBEY_LYRICS_API_URL = "https://lyrics.api.dacubeking.com/";
 
 // Supported Languages
 export const romanizationLanguages: string[] = [
