@@ -6,6 +6,7 @@
     "main": "index.js",
     "scripts": {
         "dev": "extension dev --browser chrome --polyfill",
+				"dev:firefox": "extension dev --browser firefox --polyfill",
         "dev:brave": "extension dev --chromium-binary \"/Applications/Brave Browser.app/Contents/MacOS/Brave Browser\" --polyfill",
         "start": "extension start --polyfill",
         "build": "extension build --browser all --polyfill",

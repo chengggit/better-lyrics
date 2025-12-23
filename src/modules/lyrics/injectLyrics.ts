@@ -258,11 +258,11 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
       }
 
       if (!allZero) {
-        instrumentalElement.setAttribute(
-          "onClick",
-          `const player = document.getElementById("movie_player"); player.seekTo(${lyricItem.startTimeMs / 1000}, true);player.playVideo();`
-        );
+        const seekTime = lyricItem.startTimeMs / 1000;
         instrumentalElement.addEventListener("click", () => {
+          Utils.log(`[BetterLyrics] Seeking to ${seekTime.toFixed(2)}s`);
+          document.body.dataset.blyricsSeekTime = String(seekTime);
+          document.dispatchEvent(new CustomEvent("blyrics-seek-to"));
           animEngineState.scrollResumeTime = 0;
         });
       }
@@ -381,7 +381,8 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
         }
 
         Utils.log(`[BetterLyrics] Seeking to ${seekTime.toFixed(2)}s`);
-        document.dispatchEvent(new CustomEvent("blyrics-seek-to", { detail: { time: seekTime } }));
+        document.body.dataset.blyricsSeekTime = String(seekTime);
+        document.dispatchEvent(new CustomEvent("blyrics-seek-to"));
         animEngineState.scrollResumeTime = 0;
       });
     } else {
