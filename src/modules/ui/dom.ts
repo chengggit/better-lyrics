@@ -495,7 +495,7 @@ export function addNoLyricsButton(song: string, artist: string, album: string, d
   buttonContainer.className = "blyrics-no-lyrics-button-container";
 
   const addLyricsButton = document.createElement("button");
-  addLyricsButton.className = "blyrics-add-lyrics-button";
+  addLyricsButton.className = "blyrics-no-lyrics-button";
   addLyricsButton.textContent = "Add Lyrics to LRCLib";
 
   const url = new URL(Constants.LRCLIB_UPLOAD_URL);
@@ -512,7 +512,7 @@ export function addNoLyricsButton(song: string, artist: string, album: string, d
   const geniusSearchUrl = `https://genius.com/search?q=${searchQuery}`;
 
   const geniusSearch = document.createElement("button");
-  geniusSearch.className = "blyrics-add-lyrics-button";
+  geniusSearch.className = "blyrics-no-lyrics-button";
   geniusSearch.textContent = "Try search on Genius";
 
   geniusSearch.addEventListener("click", () => {

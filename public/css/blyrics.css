@@ -474,7 +474,7 @@
 	gap: 1rem;
 }
 
-.blyrics-add-lyrics-button {
+.blyrics-no-lyrics-button {
 	background-color: var(--blyrics-footer-bg-color);
 	border: 1px solid var(--blyrics-footer-border-color);
 	border-radius: var(--blyrics-border-radius);
@@ -487,13 +487,13 @@
 	transition: all 0.3s ease;
 }
 
-.blyrics-add-lyrics-button:hover {
+.blyrics-no-lyrics-button:hover {
 	background-color: rgba(255, 255, 255, 0.2);
 	border-color: rgba(255, 255, 255, 0.3);
 	transform: translateY(-2px);
 }
 
-.blyrics-add-lyrics-button:active {
+.blyrics-no-lyrics-button:active {
 	transform: translateY(0);
 }
 
