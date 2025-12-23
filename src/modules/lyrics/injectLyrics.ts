@@ -19,6 +19,7 @@ import {
   ZERO_DURATION_ANIMATION_CLASS,
 } from "@constants";
 import { containsNonLatin, testRtl } from "@modules/lyrics/lyricParseUtils";
+import { createInstrumentalElement } from "@modules/lyrics/createInstrumentalElement";
 import { applySegmentMapToLyrics, type LyricSourceResultWithMeta } from "@modules/lyrics/lyrics";
 import type { Lyric, LyricPart } from "@modules/lyrics/providers/shared";
 import type { TranslationResult } from "@modules/lyrics/translation";
@@ -34,6 +35,20 @@ import { animEngineState, lyricsElementAdded } from "@modules/ui/animationEngine
 import { addFooter, addNoLyricsButton, cleanup, createLyricsWrapper, flushLoader, renderLoader } from "@modules/ui/dom";
 import { getRelativeBounds, log } from "@utils";
 import { AppState } from "@/index";
+
+function findNearestAgent(lyrics: Lyric[], fromIndex: number): string | undefined {
+  for (let i = fromIndex - 1; i >= 0; i--) {
+    if (!lyrics[i].isInstrumental && lyrics[i].agent) {
+      return lyrics[i].agent;
+    }
+  }
+  for (let i = fromIndex + 1; i < lyrics.length; i++) {
+    if (!lyrics[i].isInstrumental && lyrics[i].agent) {
+      return lyrics[i].agent;
+    }
+  }
+  return undefined;
+}
 
 const resizeObserver = new ResizeObserver(entries => {
   for (const entry of entries) {
@@ -57,6 +72,12 @@ export interface PartData {
   duration: number;
   lyricElement: HTMLElement;
   animationStartTimeMs: number;
+}
+
+export interface InstrumentalElements {
+  waveClip: SVGElement;
+  wavePath: SVGElement;
+  fill: SVGElement;
 }
 
 export type LineData = {
@@ -246,6 +267,53 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
   let syncType: SyncType = allZero ? "none" : "synced";
 
   lyrics.forEach((lyricItem, lineIndex) => {
+    if (lyricItem.isInstrumental) {
+      const instrumentalElement = createInstrumentalElement(lyricItem.durationMs, lineIndex);
+      instrumentalElement.classList.add("blyrics--line");
+      instrumentalElement.dataset.time = String(lyricItem.startTimeMs / 1000);
+      instrumentalElement.dataset.duration = String(lyricItem.durationMs / 1000);
+      instrumentalElement.dataset.lineNumber = String(lineIndex);
+      instrumentalElement.dataset.instrumental = "true";
+
+      const agent = findNearestAgent(lyrics, lineIndex);
+      if (agent) {
+        instrumentalElement.dataset.agent = agent;
+      }
+
+      if (!allZero) {
+        instrumentalElement.setAttribute(
+          "onClick",
+          `const player = document.getElementById("movie_player"); player.seekTo(${lyricItem.startTimeMs / 1000}, true);player.playVideo();`
+        );
+        instrumentalElement.addEventListener("click", () => {
+          animEngineState.scrollResumeTime = 0;
+        });
+      }
+
+      const line: LineData = {
+        lyricElement: instrumentalElement,
+        time: lyricItem.startTimeMs / 1000,
+        duration: lyricItem.durationMs / 1000,
+        parts: [],
+        isScrolled: false,
+        animationStartTimeMs: Infinity,
+        isAnimationPlayStatePlaying: false,
+        accumulatedOffsetMs: 0,
+        isAnimating: false,
+        isSelected: false,
+        height: -1,
+        position: -1,
+      };
+
+      try {
+        lines.push(line);
+        lyricsContainer.appendChild(instrumentalElement);
+      } catch (_err) {
+        log(LYRICS_WRAPPER_NOT_VISIBLE_LOG);
+      }
+      return;
+    }
+
     if (!lyricItem.parts) {
       lyricItem.parts = [];
     }
@@ -302,11 +370,41 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
     }
 
     if (!allZero) {
-      lyricElement.setAttribute(
-        "onClick",
-        `const player = document.getElementById("movie_player"); player.seekTo(${item.startTimeMs / 1000}, true);player.playVideo();`
-      );
-      lyricElement.addEventListener("click", _e => {
+      lyricElement.addEventListener("click", e => {
+        const target = e.target as HTMLElement;
+        const container = lyricElement.closest(`.${LYRICS_CLASS}`) as HTMLElement | null;
+        const isRichsync = container?.dataset.sync === "richsync";
+
+        let seekTime: number;
+        if (isRichsync) {
+          let wordElement = target.closest(`.${WORD_CLASS}`) as HTMLElement | null;
+
+          if (!wordElement) {
+            const words = lyricElement.querySelectorAll(`.${WORD_CLASS}`);
+            let closestDist = Infinity;
+            words.forEach(word => {
+              const rect = word.getBoundingClientRect();
+              const centerX = rect.left + rect.width / 2;
+              const centerY = rect.top + rect.height / 2;
+              const dist = Math.hypot(e.clientX - centerX, e.clientY - centerY);
+              if (dist < closestDist) {
+                closestDist = dist;
+                wordElement = word as HTMLElement;
+              }
+            });
+          }
+
+          if (!wordElement) {
+            return;
+          }
+
+          seekTime = parseFloat(wordElement.dataset.time || "0");
+        } else {
+          seekTime = parseFloat(lyricElement.dataset.time || "0");
+        }
+
+        log(`[BetterLyrics] Seeking to ${seekTime.toFixed(2)}s`);
+        document.dispatchEvent(new CustomEvent("blyrics-seek-to", { detail: { time: seekTime } }));
         animEngineState.scrollResumeTime = 0;
       });
     } else {
@@ -441,7 +539,7 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
   animEngineState.scrollResumeTime = 0;
 
   if (lyrics[0].words !== NO_LYRICS_TEXT) {
-    addFooter(data.source, data.sourceHref, data.song, data.artist, data.album, data.duration);
+    addFooter(data.source, data.sourceHref, data.song, data.artist, data.album, data.duration, data.providerKey);
   } else {
     addNoLyricsButton(data.song, data.artist, data.album, data.duration);
   }
@@ -456,6 +554,9 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
 
   lyricsContainer.dataset.sync = syncType;
   lyricsContainer.dataset.loaderVisible = String(keepLoaderVisible);
+  if (lyrics[0].words === NO_LYRICS_TEXT) {
+    lyricsContainer.dataset.noLyrics = "true";
+  }
 
   let lyricsData = {
     lines: lines,
@@ -488,7 +589,7 @@ export function calculateLyricPositions() {
 
     data.lyricWidth = lyricsElement.clientWidth;
 
-    data.lines.forEach((line, i) => {
+    data.lines.forEach(line => {
       let bounds = getRelativeBounds(lyricsElement, line.lyricElement);
       line.position = bounds.y;
       line.height = bounds.height;

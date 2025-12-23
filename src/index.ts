@@ -12,8 +12,16 @@ import {
   loadTranslationSettings,
   onAlbumArtEnabled,
 } from "@modules/settings/settings";
-import { injectHeadTags } from "@modules/ui/dom";
-import { disableInertWhenFullscreen, enableLyricsTab, initializeLyrics, lyricReloader } from "@modules/ui/observer";
+import { injectHeadTags, setupAdObserver } from "@modules/ui/dom";
+import {
+  disableInertWhenFullscreen,
+  enableLyricsTab,
+  initializeLyrics,
+  lyricReloader,
+  setupAltHoverHandler,
+  setupHomepageFullscreenHandler,
+  setupWakeLockForFullscreen,
+} from "@modules/ui/observer";
 import { log, setUpLog } from "@utils";
 
 export interface PlayerDetails {
@@ -89,9 +97,12 @@ export let AppState: AppState = {
 export async function modify(): Promise<void> {
   setUpLog();
   await injectHeadTags();
+  setupAdObserver();
   enableLyricsTab();
+  setupHomepageFullscreenHandler();
   hideCursorOnIdle();
   handleSettings();
+  setupWakeLockForFullscreen();
   loadTranslationSettings();
   subscribeToCustomStyles();
   await purgeExpiredKeys();
@@ -100,6 +111,7 @@ export async function modify(): Promise<void> {
   lyricReloader();
   initializeLyrics();
   disableInertWhenFullscreen();
+  setupAltHoverHandler();
   initProviders();
   log(
     INITIALIZE_LOG,

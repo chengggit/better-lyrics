@@ -5,13 +5,14 @@ import {
   LYRICS_CLASS,
   LYRICS_SPACING_ELEMENT_ID,
   NO_LYRICS_ELEMENT_LOG,
+  PAUSED_CLASS,
   PRE_ANIMATING_CLASS,
   TAB_HEADER_CLASS,
   TAB_RENDERER_SELECTOR,
   USER_SCROLLING_CLASS,
 } from "@constants";
 import { calculateLyricPositions, type LineData } from "@modules/lyrics/injectLyrics";
-import { isLoaderActive } from "@modules/ui/dom";
+import { hideAdOverlay, isAdPlaying, isLoaderActive, showAdOverlay } from "@modules/ui/dom";
 import { log } from "@utils";
 import { AppState } from "@/index";
 
@@ -131,6 +132,13 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
     return;
   }
 
+  if (isAdPlaying()) {
+    showAdOverlay();
+    return;
+  } else {
+    hideAdOverlay();
+  }
+
   try {
     const lyricsElement = document.getElementsByClassName(LYRICS_CLASS)[0] as HTMLElement;
     // If lyrics element doesn't exist, clear the interval and return silently
@@ -209,10 +217,9 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
       if (!isPlaying) {
         setUpAnimationEarlyTime = 0;
       }
-      if (
-        currentTime + setUpAnimationEarlyTime >= time &&
-        (currentTime < nextTime || currentTime < time + lineData.duration + 0.05)
-      ) {
+
+      const effectiveEndTime = Math.max(nextTime, time + lineData.duration + 0.05);
+      if (currentTime + setUpAnimationEarlyTime >= time && currentTime < effectiveEndTime) {
         lineData.isSelected = true;
 
         const timeDelta = currentTime - time;
@@ -233,6 +240,7 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
             const timeDelta = currentTime - elTime;
 
             part.lyricElement.classList.remove(ANIMATING_CLASS);
+            part.lyricElement.classList.remove(PAUSED_CLASS);
 
             //correct for the animation not starting at 0% and instead at -10%
             const swipeAnimationDelay = -timeDelta - elDuration * 0.1 + "s";
@@ -253,12 +261,13 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
         if (isPlaying !== lineData.isAnimationPlayStatePlaying) {
           lineData.isAnimationPlayStatePlaying = isPlaying;
           if (!isPlaying) {
-            lineData.isSelected = false;
             const children = [lineData, ...lineData.parts];
             children.forEach(part => {
               if (part.animationStartTimeMs > now) {
                 part.lyricElement.classList.remove(ANIMATING_CLASS);
                 part.lyricElement.classList.remove(PRE_ANIMATING_CLASS);
+              } else {
+                part.lyricElement.classList.add(PAUSED_CLASS);
               }
             });
           }
@@ -271,8 +280,10 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
             part.lyricElement.style.setProperty("--blyrics-anim-delay", "");
             part.lyricElement.classList.remove(ANIMATING_CLASS);
             part.lyricElement.classList.remove(PRE_ANIMATING_CLASS);
+            part.lyricElement.classList.remove(PAUSED_CLASS);
             part.animationStartTimeMs = Infinity;
           });
+
           lineData.isSelected = false;
           lineData.isAnimating = false;
         }

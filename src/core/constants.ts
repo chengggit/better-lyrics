@@ -10,6 +10,7 @@ export const RTL_CLASS: string = "blyrics-rtl";
 export const WORD_CLASS: string = "blyrics--word";
 export const BACKGROUND_LYRIC_CLASS = "blyrics-background-lyric";
 export const ANIMATING_CLASS: string = "blyrics--animating";
+export const PAUSED_CLASS: string = "blyrics--paused";
 export const PRE_ANIMATING_CLASS: string = "blyrics--pre-animating";
 export const USER_SCROLLING_CLASS: string = "blyrics-user-scrolling";
 export const TRANSLATED_LYRICS_CLASS: string = "blyrics--translated";
@@ -24,6 +25,7 @@ export const SONG_IMAGE_SELECTOR: string = "#song-image>#thumbnail>#img";
 export const TAB_RENDERER_SELECTOR: string = "#tab-renderer";
 export const NO_LYRICS_TEXT_SELECTOR: string =
   "#tab-renderer > ytmusic-message-renderer > yt-formatted-string.text.style-scope.ytmusic-message-renderer";
+export const FULLSCREEN_BUTTON_SELECTOR: string = ".fullscreen-button";
 
 // DOM IDs and Attributes
 export const LYRICS_LOADER_ID: string = "blyrics-loader";
@@ -46,6 +48,7 @@ export const NOTO_SANS_UNIVERSAL_LINK: string =
 export const LYRICS_API_URL: string = "https://lyrics-api-go-better-lyrics-api-pr-12.up.railway.app/getLyrics";
 export const DISCORD_INVITE_URL: string = "https://discord.gg/UsHE3d5fWF";
 export const LRCLIB_API_URL: string = "https://lrclib.net/api/get";
+export const LEGATO_API_URL: string = "https://lyrics-api-go-better-lyrics-api-pr-12.up.railway.app/kugou/getLyrics";
 export const LRCLIB_UPLOAD_URL: string = "https://lrclibup.boidu.dev/";
 export const LRCLIB_CLIENT_HEADER: string = "BetterLyrics Extension (https://github.com/better-lyrics/better-lyrics)";
 export const TRANSLATE_LYRICS_URL = function (lang: string, text: string): string {
@@ -167,14 +170,31 @@ export const NO_LYRICS_TEXT: string = "No lyrics found for this song";
 export const MUSIC_NOTES: string = "♪𝅘𝅥𝅮𝅘𝅥𝅯𝅘𝅥𝅰𝅘𝅥𝅱𝅘𝅥𝅲";
 
 export const DEFAULT_LINE_SYNCED_WORD_DELAY_MS = 50;
+export const BLYRICS_INSTRUMENTAL_GAP_MS = 5000;
 
-export const LYRIC_SOURCE_KEYS = [
-  "bLyrics-richsynced",
-  "bLyrics-synced",
-  "musixmatch-richsync",
-  "musixmatch-synced",
-  "lrclib-synced",
-  "lrclib-plain",
-  "yt-captions",
-  "yt-lyrics",
-] as const;
+export const PLAYER_BAR_SELECTOR: string = "ytmusic-player-bar";
+export const AD_PLAYING_ATTR: string = "is-advertisement";
+export const LYRICS_AD_OVERLAY_ID: string = "blyrics-ad-overlay";
+
+export type SyncType = "syllable" | "word" | "line" | "unsynced";
+
+export interface ProviderConfig {
+  key: string;
+  displayName: string;
+  syncType: SyncType;
+  priority: number;
+}
+
+export const PROVIDER_CONFIGS: ProviderConfig[] = [
+  { key: "bLyrics-richsynced", displayName: "Better Lyrics", syncType: "syllable", priority: 0 },
+  { key: "musixmatch-richsync", displayName: "Musixmatch", syncType: "word", priority: 1 },
+  { key: "yt-captions", displayName: "Youtube Captions", syncType: "line", priority: 2 },
+  { key: "bLyrics-synced", displayName: "Better Lyrics", syncType: "line", priority: 3 },
+  { key: "lrclib-synced", displayName: "LRCLib", syncType: "line", priority: 4 },
+  { key: "legato-synced", displayName: "Legato", syncType: "line", priority: 5 },
+  { key: "musixmatch-synced", displayName: "Musixmatch", syncType: "line", priority: 6 },
+  { key: "yt-lyrics", displayName: "Youtube", syncType: "unsynced", priority: 7 },
+  { key: "lrclib-plain", displayName: "LRCLib", syncType: "unsynced", priority: 8 },
+];
+
+export const LYRIC_SOURCE_KEYS = PROVIDER_CONFIGS.map(p => p.key) as unknown as readonly string[];

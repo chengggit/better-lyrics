@@ -48,6 +48,13 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
+      - name: Bypass Cloudflare for GitHub Action
+        uses: xiaotianxt/bypass-cloudflare-for-github-action@v2.0.1
+        with:
+          cf_account_id: ${{ secrets.CF_ACCOUNT_ID }}
+          cf_zone_id: ${{ secrets.CF_ZONE_ID }}
+          cf_api_token: ${{ secrets.CF_API_TOKEN }}
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -71,9 +78,11 @@ jobs:
         run: npm run update-version -- ${{ github.event.inputs.version }}
 
       - name: Build extension
-        run: npm run build
         env:
           RELEASE_TYPE: ${{ github.event.inputs.is_canary == 'true' && 'canary' || '' }}
+          SOURCEMAPS_API_KEY: ${{ secrets.SOURCEMAPS_API_KEY }}
+          SOURCEMAPS_BASE_URL: ${{ env.SOURCEMAPS_API_URL }}
+        run: npm run build:ci
 
       # https://github.com/planetscale/ghcommit-action/issues/43#issuecomment-2313129696
       - name: Stage all changes
@@ -97,6 +106,8 @@ jobs:
       - name: Create and push tag
         if: steps.stage.outputs.changes_exist == 'true'
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin ${{ github.ref_name }}
           git reset --hard origin/${{ github.ref_name }}
           git tag -a "v${{ github.event.inputs.version }}" -m "Version ${{ github.event.inputs.version }}"

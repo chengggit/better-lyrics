@@ -13,6 +13,87 @@ import { log } from "@utils";
 import type { PlayerDetails } from "@/index";
 import { handleModifications, reloadLyrics, AppState } from "@/index";
 import { addAlbumArtToLayout, cleanup, injectSongAttributes, isLoaderActive, renderLoader } from "./dom";
+import {
+  isPlayerPageOpen,
+  isNavigating,
+  openPlayerPageForFullscreen,
+  closePlayerPageIfOpenedForFullscreen,
+} from "@modules/ui/navigation";
+import {
+  FULLSCREEN_BUTTON_SELECTOR,
+  GENERAL_ERROR_LOG,
+  LYRICS_WRAPPER_ID,
+} from "@constants";
+
+let wakeLock: WakeLockSentinel | null = null;
+
+async function requestWakeLock(): Promise<void> {
+  if (!("wakeLock" in navigator)) {
+    log(GENERAL_ERROR_LOG, "Wake Lock API not supported in this browser.");
+    return;
+  }
+
+  try {
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", () => {
+      wakeLock = null;
+    });
+  } catch (err) {
+    log(GENERAL_ERROR_LOG, "Wake Lock request failed:", err);
+  }
+}
+
+function handleVisibilityChange(): void {
+  if (document.visibilityState === "visible" && wakeLock === null) {
+    requestWakeLock();
+  }
+}
+
+export function initWakeLock(): void {
+  requestWakeLock();
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+}
+
+export function cleanupWakeLock(): void {
+  if (wakeLock) {
+    wakeLock.release();
+    wakeLock = null;
+  }
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+}
+
+type FullscreenCallback = () => void;
+
+export function onFullscreenChange(onEnter: FullscreenCallback, onExit: FullscreenCallback): void {
+  const appLayout = document.querySelector("ytmusic-app-layout");
+  if (!appLayout) {
+    setTimeout(() => onFullscreenChange(onEnter, onExit), 1000);
+    return;
+  }
+
+  let wasFullscreen = appLayout.hasAttribute("player-fullscreened");
+
+  const observer = new MutationObserver(() => {
+    const isFullscreen = appLayout.hasAttribute("player-fullscreened");
+
+    if (!wasFullscreen && isFullscreen) {
+      onEnter();
+    } else if (wasFullscreen && !isFullscreen) {
+      onExit();
+    }
+
+    wasFullscreen = isFullscreen;
+  });
+
+  observer.observe(appLayout, { attributes: true, attributeFilter: ["player-fullscreened"] });
+}
+
+export function setupWakeLockForFullscreen(): void {
+  onFullscreenChange(
+    () => initWakeLock(),
+    () => cleanupWakeLock()
+  );
+}
 
 /**
  * Enables the lyrics tab and prevents it from being disabled by YouTube Music.
@@ -139,13 +220,12 @@ export function initializeLyrics(): void {
 
     if (currentVideoId !== AppState.lastVideoId || currentVideoDetails !== AppState.lastVideoDetails) {
       AppState.areLyricsTicking = false;
+      AppState.lastVideoId = currentVideoId;
+      AppState.lastVideoDetails = currentVideoDetails;
       if (!detail.song || !detail.artist) {
         log("Lyrics switched: Still waiting for metadata ", detail.videoId);
         return;
       }
-
-      AppState.lastVideoId = currentVideoId;
-      AppState.lastVideoDetails = currentVideoDetails;
       log(SONG_SWITCHED_LOG, detail.videoId);
 
       AppState.queueLyricInjection = true;
@@ -214,4 +294,143 @@ export function scrollEventHandler(): void {
     }
     animEngineState.scrollResumeTime = Date.now() + 25000;
   }
+}
+
+/**
+ * Sets up a keyboard handler to intercept 'f' key presses on non-player pages.
+ * When pressed, navigates to the player page first, then triggers fullscreen.
+ * This ensures Better Lyrics can display properly in fullscreen mode.
+ * Also sets up a listener to return to the previous view when exiting fullscreen.
+ */
+export function setupHomepageFullscreenHandler(): void {
+  document.addEventListener(
+    "keydown",
+    (event: KeyboardEvent) => {
+      if (event.key !== "f" && event.key !== "F") {
+        return;
+      }
+
+      if (event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+
+      const target = event.target as HTMLElement;
+      const isTypingInInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
+
+      if (isTypingInInput) {
+        return;
+      }
+
+      interceptFullscreenAction(event);
+    },
+    { capture: true }
+  );
+
+  setupFullscreenExitListener();
+  setupMiniplayerFullscreenHandler();
+}
+
+function interceptFullscreenAction(event: Event): void {
+  if (isPlayerPageOpen()) {
+    return;
+  }
+
+  if (!AppState.lastVideoId) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (event instanceof KeyboardEvent) {
+    event.stopImmediatePropagation();
+  }
+
+  if (isNavigating()) {
+    return;
+  }
+
+  openPlayerPageForFullscreen().then(() => {
+    triggerFullscreen();
+  });
+}
+
+function setupFullscreenExitListener(): void {
+  const appLayout = document.querySelector("ytmusic-app-layout");
+  if (!appLayout) {
+    setTimeout(setupFullscreenExitListener, 1000);
+    return;
+  }
+
+  let wasFullscreen = false;
+
+  const observer = new MutationObserver(() => {
+    const currentState = appLayout.getAttribute("player-ui-state");
+    const isFullscreen = currentState === "FULLSCREEN";
+
+    if (wasFullscreen && !isFullscreen) {
+      closePlayerPageIfOpenedForFullscreen();
+    }
+
+    wasFullscreen = isFullscreen;
+  });
+
+  observer.observe(appLayout, { attributes: true, attributeFilter: ["player-ui-state"] });
+}
+
+function triggerFullscreen(): void {
+  const fullscreenButton = document.querySelector(FULLSCREEN_BUTTON_SELECTOR) as HTMLElement;
+
+  if (fullscreenButton) {
+    fullscreenButton.click();
+  } else {
+    const keyEvent = new KeyboardEvent("keydown", {
+      key: "f",
+      code: "KeyF",
+      keyCode: 70,
+      which: 70,
+      bubbles: true,
+      cancelable: true,
+    });
+    document.dispatchEvent(keyEvent);
+  }
+}
+
+function setupMiniplayerFullscreenHandler(): void {
+  const fullscreenButton = document.querySelector("#song-media-window .fullscreen-button") as HTMLElement;
+  if (!fullscreenButton) {
+    setTimeout(setupMiniplayerFullscreenHandler, 1000);
+    return;
+  }
+
+  fullscreenButton.addEventListener("click", interceptFullscreenAction, { capture: true });
+}
+
+export function setupAltHoverHandler(): void {
+  const updateAltState = (isAltPressed: boolean) => {
+    const lyricsWrapper = document.getElementById(LYRICS_WRAPPER_ID);
+    if (!lyricsWrapper) return;
+
+    if (isAltPressed) {
+      lyricsWrapper.setAttribute("blyrics-alt-hover", "");
+    } else {
+      lyricsWrapper.removeAttribute("blyrics-alt-hover");
+    }
+  };
+
+  document.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (e.key === "Alt") {
+      updateAltState(true);
+    }
+  });
+
+  document.addEventListener("keyup", (e: KeyboardEvent) => {
+    if (e.key === "Alt") {
+      updateAltState(false);
+    }
+  });
+
+  window.addEventListener("blur", () => {
+    updateAltState(false);
+  });
 }

@@ -137,8 +137,8 @@ ytmusic-player-page:not([is-mweb-modernization-enabled])[player-fullscreened]
 #main-panel.ytmusic-player-page {
   display: flex;
   justify-content: center;
+  flex-direction: column;
 }
-
 
 ytmusic-app-layout:not([is-mweb-modernization-enabled])[player-fullscreened]
 > [slot="player-page"] {
@@ -218,6 +218,7 @@ ytmusic-player-page:not([is-mweb-modernization-enabled]):not([is-mweb-modernizat
 
 ytmusic-player-page:not([is-mweb-modernization-enabled])[player-fullscreened]
 #player.ytmusic-player-page {
+  flex: none;
   margin: 0 auto;
 }
 
@@ -323,11 +324,3 @@ ytmusic-player-page[is-mweb-modernization-enabled][player-fullscreened]
 .ytmusic-av-toggle{
   border-radius: 1000rem !important;
 }
-
-
-/* Clicking this button causes the fullscreen view to completly mess up. We're just hiding it for now */
-ytmusic-player-page[player-ui-state=MINIPLAYER]:not([video-mode])
-#song-media-window > div > yt-icon-button.fullscreen-button.style-scope.ytmusic-player {
-  display: none !important;
-}
-
