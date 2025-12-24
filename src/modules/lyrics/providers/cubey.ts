@@ -64,9 +64,6 @@ function handleTurnstile(): Promise<string> {
   });
 }
 
-const CUBEY_LYRICS_API_URL_TURNSTILE = "https://lyrics.api.dacubeking.com/";
-const CUBEY_LYRICS_API_URL = "https://go-api-proxy-better-lyrics-cf-api.dacubeking.workers.dev/";
-
 export type CubeyLyricSourceResult = LyricSourceResult & {
   album: string;
   artist: string;
@@ -77,6 +74,7 @@ export type CubeyLyricSourceResult = LyricSourceResult & {
 import { log } from "@core/utils";
 import { lrcFixers, parseLRC, parsePlainLyrics } from "./lrcUtils";
 import { fillTtml } from "@modules/lyrics/providers/blyrics/blyrics";
+import { CUBEY_LYRICS_API_URL, CUBEY_LYRICS_API_URL_TURNSTILE } from "@/core/constants";
 
 /**
  *
@@ -110,7 +108,7 @@ export default async function cubey(providerParameters: ProviderParameters): Pro
       log(LOG_PREFIX, "Forcing new token, removing any existing one.");
       await chrome.storage.local.remove("jwtToken");
     } else {
-      const storedData = await chrome.storage.local.get("jwtToken");
+      const storedData = (await chrome.storage.local.get("jwtToken")) as { jwtToken?: string };
       if (storedData.jwtToken) {
         if (isJwtExpired(storedData.jwtToken)) {
           log(LOG_PREFIX, "Local JWT has expired. Removing and requesting a new one.");

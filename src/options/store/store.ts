@@ -70,7 +70,9 @@ function installedThemeToStoreTheme(installed: InstalledStoreTheme): StoreTheme 
 }
 
 async function loadUserRatings(): Promise<void> {
-  const { userThemeRatings } = await chrome.storage.local.get("userThemeRatings");
+  const { userThemeRatings } = (await chrome.storage.local.get("userThemeRatings")) as {
+    userThemeRatings?: Record<string, number>;
+  };
   userRatingsCache = userThemeRatings || {};
 }
 
@@ -80,7 +82,9 @@ async function saveUserRating(themeId: string, rating: number): Promise<void> {
 }
 
 async function loadUserInstalls(): Promise<void> {
-  const { userThemeInstalls } = await chrome.storage.local.get("userThemeInstalls");
+  const { userThemeInstalls } = (await chrome.storage.local.get("userThemeInstalls")) as {
+    userThemeInstalls?: Record<string, boolean>;
+  };
   userInstallsCache = userThemeInstalls || {};
 }
 
@@ -963,7 +967,7 @@ function setupKeyboardListeners(): void {
 function setupThemeChangeListener(): void {
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "sync" && changes.themeName) {
-      const newThemeName = changes.themeName.newValue;
+      const newThemeName = changes.themeName.newValue as string | undefined;
       if (!newThemeName || !newThemeName.startsWith("store:")) {
         clearActiveStoreTheme().then(() => updateYourThemesDropdown());
       } else {

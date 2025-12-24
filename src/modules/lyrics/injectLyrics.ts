@@ -19,6 +19,7 @@ import {
   WORD_CLASS,
   ZERO_DURATION_ANIMATION_CLASS,
 } from "@constants";
+import { AppState } from "@core/appState";
 import { containsNonLatin, testRtl } from "@modules/lyrics/lyricParseUtils";
 import { createInstrumentalElement } from "@modules/lyrics/createInstrumentalElement";
 import { applySegmentMapToLyrics, type LyricSourceResultWithMeta } from "@modules/lyrics/lyrics";
@@ -35,7 +36,6 @@ import {
 import { animEngineState, lyricsElementAdded } from "@modules/ui/animationEngine";
 import { addFooter, addNoLyricsButton, cleanup, createLyricsWrapper, flushLoader, renderLoader } from "@modules/ui/dom";
 import { getRelativeBounds, log } from "@utils";
-import { AppState } from "@/index";
 
 function findNearestAgent(lyrics: Lyric[], fromIndex: number): string | undefined {
   for (let i = fromIndex - 1; i >= 0; i--) {
@@ -282,11 +282,10 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
       }
 
       if (!allZero) {
-        instrumentalElement.setAttribute(
-          "onClick",
-          `const player = document.getElementById("movie_player"); player.seekTo(${lyricItem.startTimeMs / 1000}, true);player.playVideo();`
-        );
+        const seekTime = lyricItem.startTimeMs / 1000;
         instrumentalElement.addEventListener("click", () => {
+          log(LOG_PREFIX, `Seeking to ${seekTime.toFixed(2)}s`);
+          document.dispatchEvent(new CustomEvent("blyrics-seek-to", { detail: { time: seekTime } }));
           animEngineState.scrollResumeTime = 0;
         });
       }

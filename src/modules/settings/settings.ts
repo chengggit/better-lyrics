@@ -1,11 +1,11 @@
 import { LOG_PREFIX_CONTENT, LYRICS_DISABLED_ATTR } from "@constants";
+import { AppState, reloadLyrics } from "@core/appState";
 import { clearCache, compileRicsToStyles, getStorage } from "@core/storage";
 import { log, setUpLog } from "@core/utils";
-import { applyCustomStyles, getAndApplyCustomStyles } from "@modules/ui/styleInjector";
 import { calculateLyricPositions } from "@modules/lyrics/injectLyrics";
 import { clearCache as clearTranslationCache } from "@modules/lyrics/translation";
 import { removeAlbumArtFromLayout } from "@modules/ui/dom";
-import { reloadLyrics, AppState } from "@/index";
+import { applyCustomStyles, getAndApplyCustomStyles } from "@modules/ui/styleInjector";
 
 type EnableDisableCallback = () => void;
 

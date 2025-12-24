@@ -542,7 +542,8 @@ export function closeThemeModal() {
 }
 
 export async function setThemeName() {
-  await chrome.storage.sync.get("themeName").then(async syncData => {
+  await chrome.storage.sync.get("themeName").then(async data => {
+    const syncData = data as { themeName?: string };
     if (syncData.themeName) {
       if (syncData.themeName.startsWith(STORE_THEME_PREFIX)) {
         const storeThemeId = syncData.themeName.slice(STORE_THEME_PREFIX.length);

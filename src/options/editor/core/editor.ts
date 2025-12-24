@@ -5,7 +5,14 @@ import {
   closeBracketsKeymap,
   completionKeymap,
 } from "@codemirror/autocomplete";
-import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
+import {
+  defaultKeymap,
+  history,
+  historyKeymap,
+  indentWithTab,
+  toggleBlockComment,
+  toggleComment,
+} from "@codemirror/commands";
 import { bracketMatching, foldGutter, foldKeymap, indentOnInput, indentUnit } from "@codemirror/language";
 import { lintGutter, lintKeymap } from "@codemirror/lint";
 import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";
@@ -27,6 +34,13 @@ import { materialDark } from "@fsegurai/codemirror-theme-material-dark";
 import { colorHighlighter, colorHighlighterStyles, ricsLanguage, ricsLinter } from "codemirror-lang-rics";
 import { rainbowBrackets } from "../features/syntax";
 import { onChange } from "../features/themes";
+
+// -- Custom Keybindings ----------------------------
+
+const commentKeymap: readonly KeyBinding[] = [
+  { key: "Mod-/", run: toggleComment },
+  { key: "Mod-Shift-a", run: toggleBlockComment },
+];
 
 export interface EditorOptions {
   enableSearch?: boolean;
@@ -70,6 +84,7 @@ export function createEditorState(initialContents: string, options: EditorOption
       { key: "Tab", run: acceptCompletion },
       indentWithTab,
       ...closeBracketsKeymap,
+      ...commentKeymap,
       ...defaultKeymap,
       ...historyKeymap,
       ...foldKeymap,

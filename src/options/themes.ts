@@ -74,10 +74,16 @@ const themes: Theme[] = [
     link: "https://github.com/chengggit/Youtube-Music-Dynamic-Theme",
     path: "Dynamic Background.css",
   },
+  {
+    name: "Apple Music",
+    author: "tposejank",
+    link: "https://x.com/tposejank",
+    path: "Apple Music.css",
+  },
 ];
 
 export async function getCustomThemes(): Promise<CustomTheme[]> {
-  const result = await chrome.storage.local.get("customThemes");
+  const result = (await chrome.storage.local.get("customThemes")) as { customThemes?: CustomTheme[] };
   return result.customThemes || [];
 }
 

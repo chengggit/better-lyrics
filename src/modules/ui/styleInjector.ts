@@ -1,8 +1,8 @@
 import { DEFAULT_LINE_SYNCED_WORD_DELAY_MS, GENERAL_ERROR_LOG, LOG_PREFIX } from "@constants";
+import { AppState, reloadLyrics } from "@core/appState";
 import { decompressString, isCompressed } from "@core/compression";
 import { compileRicsToStyles, loadChunkedStyles } from "@core/storage";
 import { log } from "@utils";
-import { AppState, reloadLyrics } from "@/index";
 import { cachedDurations, cachedProperties } from "./animationEngine";
 
 function parseBlyricsConfig(cssContent: string): Map<string, string> {
@@ -63,13 +63,23 @@ export function applyCustomStyles(css: string): void {
   cachedProperties.clear();
 }
 
+interface CSSStorageData {
+  cssStorageType?: "sync" | "local" | "chunked";
+  customCSS?: string;
+  cssCompressed?: boolean;
+}
+
 function decompressStyles(css: string): string {
   return decompressString(css);
 }
 
 export async function getAndApplyCustomStyles(): Promise<void> {
   try {
-    const syncData = await chrome.storage.sync.get(["cssStorageType", "customCSS", "cssCompressed"]);
+    const syncData = (await chrome.storage.sync.get([
+      "cssStorageType",
+      "customCSS",
+      "cssCompressed",
+    ])) as CSSStorageData;
 
     let css: string | null = null;
     let compressed = false;
@@ -78,11 +88,11 @@ export async function getAndApplyCustomStyles(): Promise<void> {
       css = await loadChunkedStyles();
       compressed = syncData.cssCompressed || false;
     } else if (syncData.cssStorageType === "local") {
-      const localData = await chrome.storage.local.get(["customCSS", "cssCompressed"]);
-      css = localData.customCSS;
+      const localData = (await chrome.storage.local.get(["customCSS", "cssCompressed"])) as CSSStorageData;
+      css = localData.customCSS ?? null;
       compressed = localData.cssCompressed || false;
     } else {
-      css = syncData.customCSS;
+      css = syncData.customCSS ?? null;
       compressed = syncData.cssCompressed || false;
     }
 
@@ -97,16 +107,16 @@ export async function getAndApplyCustomStyles(): Promise<void> {
     try {
       const chunkedStyles = await loadChunkedStyles();
       if (chunkedStyles) {
-        const syncData = await chrome.storage.sync.get("cssCompressed");
+        const syncCompressedData = (await chrome.storage.sync.get("cssCompressed")) as CSSStorageData;
         let css = chunkedStyles;
-        if (syncData.cssCompressed || isCompressed(css)) {
+        if (syncCompressedData.cssCompressed || isCompressed(css)) {
           css = decompressStyles(css);
         }
         applyCustomStyles(compileRicsToStyles(css));
         return;
       }
 
-      const localData = await chrome.storage.local.get(["customCSS", "cssCompressed"]);
+      const localData = (await chrome.storage.local.get(["customCSS", "cssCompressed"])) as CSSStorageData;
       if (localData.customCSS) {
         let css = localData.customCSS;
         if (localData.cssCompressed || isCompressed(css)) {
@@ -116,7 +126,7 @@ export async function getAndApplyCustomStyles(): Promise<void> {
         return;
       }
 
-      const syncData = await chrome.storage.sync.get(["customCSS", "cssCompressed"]);
+      const syncData = (await chrome.storage.sync.get(["customCSS", "cssCompressed"])) as CSSStorageData;
       if (syncData.customCSS) {
         let css = syncData.customCSS;
         if (syncData.cssCompressed || isCompressed(css)) {
@@ -149,7 +159,7 @@ export function subscribeToCustomStyles(): void {
   chrome.storage.onChanged.addListener(async (changes, area) => {
     if ((area === "sync" || area === "local") && changes.customCSS) {
       if (changes.customCSS.newValue) {
-        let css = changes.customCSS.newValue;
+        let css = changes.customCSS.newValue as string;
         if (isCompressed(css)) {
           css = decompressStyles(css);
         }

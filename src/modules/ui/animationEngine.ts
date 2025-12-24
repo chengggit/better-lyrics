@@ -11,10 +11,10 @@ import {
   TAB_RENDERER_SELECTOR,
   USER_SCROLLING_CLASS,
 } from "@constants";
+import { AppState } from "@core/appState";
 import { calculateLyricPositions, type LineData } from "@modules/lyrics/injectLyrics";
 import { hideAdOverlay, isAdPlaying, isLoaderActive, showAdOverlay } from "@modules/ui/dom";
 import { log } from "@utils";
-import { AppState } from "@/index";
 
 const MIRCO_SCROLL_THRESHOLD_S = 0.3;
 
@@ -232,6 +232,26 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
           // Utils.log("[BetterLyrics] Animation time sync is off, resetting");
         }
 
+        if (isPlaying !== lineData.isAnimationPlayStatePlaying) {
+          lineData.isAnimationPlayStatePlaying = isPlaying;
+          const children = [lineData, ...lineData.parts];
+          if (!isPlaying) {
+            children.forEach(part => {
+              if (part.animationStartTimeMs > now) {
+                part.lyricElement.classList.remove(ANIMATING_CLASS);
+                part.lyricElement.classList.remove(PRE_ANIMATING_CLASS);
+              } else {
+                part.lyricElement.classList.add(PAUSED_CLASS);
+              }
+            });
+          } else {
+            children.forEach(part => {
+              part.lyricElement.classList.remove(PAUSED_CLASS);
+            });
+            lineData.isAnimating = false; // reset the animation
+          }
+        }
+
         if (!lineData.isAnimating) {
           const children = [lineData, ...lineData.parts];
           children.forEach(part => {
@@ -255,22 +275,8 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
           });
 
           lineData.isAnimating = true;
+          lineData.isAnimationPlayStatePlaying = true;
           lineData.accumulatedOffsetMs = 0;
-        }
-
-        if (isPlaying !== lineData.isAnimationPlayStatePlaying) {
-          lineData.isAnimationPlayStatePlaying = isPlaying;
-          if (!isPlaying) {
-            const children = [lineData, ...lineData.parts];
-            children.forEach(part => {
-              if (part.animationStartTimeMs > now) {
-                part.lyricElement.classList.remove(ANIMATING_CLASS);
-                part.lyricElement.classList.remove(PRE_ANIMATING_CLASS);
-              } else {
-                part.lyricElement.classList.add(PAUSED_CLASS);
-              }
-            });
-          }
         }
       } else {
         if (lineData.isSelected) {

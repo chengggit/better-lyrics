@@ -1,25 +1,26 @@
 import {
   AUTO_SWITCH_ENABLED_LOG,
+  FULLSCREEN_BUTTON_SELECTOR,
+  GENERAL_ERROR_LOG,
   LYRICS_TAB_CLICKED_LOG,
+  LYRICS_WRAPPER_ID,
   PAUSING_LYRICS_SCROLL_LOG,
   SONG_SWITCHED_LOG,
   TAB_CONTENT_CLASS,
   TAB_HEADER_CLASS,
   TAB_RENDERER_SELECTOR,
 } from "@constants";
+import { AppState, handleModifications, reloadLyrics, type PlayerDetails } from "@core/appState";
 import { onAutoSwitchEnabled, onFullScreenDisabled } from "@modules/settings/settings";
 import { animationEngine, animEngineState, getResumeScrollElement } from "@modules/ui/animationEngine";
-import { log } from "@utils";
-import type { PlayerDetails } from "@/index";
-import { handleModifications, reloadLyrics, AppState } from "@/index";
-import { addAlbumArtToLayout, cleanup, injectSongAttributes, isLoaderActive, renderLoader } from "./dom";
 import {
-  isPlayerPageOpen,
-  isNavigating,
-  openPlayerPageForFullscreen,
   closePlayerPageIfOpenedForFullscreen,
+  isNavigating,
+  isPlayerPageOpen,
+  openPlayerPageForFullscreen,
 } from "@modules/ui/navigation";
-import { FULLSCREEN_BUTTON_SELECTOR, GENERAL_ERROR_LOG, LYRICS_WRAPPER_ID } from "@constants";
+import { log } from "@utils";
+import { addAlbumArtToLayout, cleanup, injectSongAttributes, isLoaderActive, renderLoader } from "./dom";
 
 let wakeLock: WakeLockSentinel | null = null;
 

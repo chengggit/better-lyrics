@@ -18,7 +18,7 @@ function isValidRating(rating: number): boolean {
 }
 
 async function getOdid(): Promise<string> {
-  const { odid } = await chrome.storage.local.get("odid");
+  const { odid } = (await chrome.storage.local.get("odid")) as { odid?: string };
   if (odid) return odid;
 
   const newOdid = crypto.randomUUID();

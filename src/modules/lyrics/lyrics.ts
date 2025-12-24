@@ -11,12 +11,11 @@ import {
   SERVER_ERROR_LOG,
   TAB_HEADER_CLASS,
 } from "@constants";
+import { AppState, type PlayerDetails } from "@core/appState";
 import { type LyricsData, processLyrics } from "@modules/lyrics/injectLyrics";
 import { stringSimilarity } from "@modules/lyrics/lyricParseUtils";
 import { renderLoader } from "@modules/ui/dom";
 import { log } from "@utils";
-import type { PlayerDetails } from "@/index";
-import { AppState } from "@/index";
 import type { CubeyLyricSourceResult } from "./providers/cubey";
 import type { LyricSourceResult, ProviderParameters } from "./providers/shared";
 import { getLyrics, newSourceMap, providerPriority } from "./providers/shared";
