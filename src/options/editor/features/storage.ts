@@ -4,6 +4,29 @@ import { syncIndicator } from "../ui/dom";
 import { editorStateManager } from "../core/state";
 import { setThemeName } from "./themes";
 
+async function getLocalStorage<T>(
+  keys: string | string[] | null
+): Promise<T> {
+  return (await chrome.storage.local.get(keys as string[])) as unknown as T;
+}
+
+async function getSyncStorage<T>(
+  keys: string | string[] | null
+): Promise<T> {
+  return (await chrome.storage.sync.get(keys as string[])) as unknown as T;
+}
+
+interface CSSStorageData {
+  cssStorageType?: "sync" | "local" | "chunked";
+  customCSS?: string | null;
+  cssCompressed?: boolean;
+}
+
+interface ChunkMetadata {
+  customCSS_chunked?: boolean;
+  customCSS_chunkCount?: number;
+}
+
 async function compressCSS(css: string): Promise<string> {
   try {
     if (typeof CompressionStream !== "undefined") {
@@ -97,7 +120,7 @@ async function saveChunkedCSS(css: string): Promise<void> {
 
   console.log(`[BetterLyrics] Splitting into ${chunks.length} chunks of ~${CHUNK_SIZE} bytes each`);
 
-  const oldMetadata = await chrome.storage.local.get(["customCSS_chunkCount"]);
+  const oldMetadata = await getLocalStorage<ChunkMetadata>(["customCSS_chunkCount"]);
   const oldChunkCount = oldMetadata.customCSS_chunkCount || 0;
 
   for (let i = 0; i < chunks.length; i++) {
@@ -135,14 +158,14 @@ async function saveChunkedCSS(css: string): Promise<void> {
 }
 
 async function loadChunkedCSS(): Promise<string | null> {
-  const metadata = await chrome.storage.local.get(["customCSS_chunked", "customCSS_chunkCount"]);
+  const metadata = await getLocalStorage<ChunkMetadata>(["customCSS_chunked", "customCSS_chunkCount"]);
 
   if (!metadata.customCSS_chunked || !metadata.customCSS_chunkCount) {
     return null;
   }
 
   const chunkKeys = Array.from({ length: metadata.customCSS_chunkCount }, (_, i) => `customCSS_chunk_${i}`);
-  const chunksData = await chrome.storage.local.get(chunkKeys);
+  const chunksData = await getLocalStorage<Record<string, string>>(chunkKeys);
 
   const chunks: string[] = [];
   for (let i = 0; i < metadata.customCSS_chunkCount; i++) {
@@ -232,17 +255,17 @@ export async function loadCustomCSS(): Promise<string> {
   let isCompressed = false;
 
   try {
-    const syncData = await chrome.storage.sync.get(["cssStorageType", "customCSS", "cssCompressed"]);
+    const syncData = await getSyncStorage<CSSStorageData>(["cssStorageType", "customCSS", "cssCompressed"]);
 
     if (syncData.cssStorageType === "chunked") {
       css = await loadChunkedCSS();
       isCompressed = syncData.cssCompressed || false;
     } else if (syncData.cssStorageType === "local") {
-      const localData = await chrome.storage.local.get(["customCSS", "cssCompressed"]);
-      css = localData.customCSS;
+      const localData = await getLocalStorage<CSSStorageData>(["customCSS", "cssCompressed"]);
+      css = localData.customCSS ?? null;
       isCompressed = localData.cssCompressed || false;
     } else {
-      css = syncData.customCSS;
+      css = syncData.customCSS ?? null;
       isCompressed = syncData.cssCompressed || false;
     }
   } catch (error) {
@@ -251,16 +274,16 @@ export async function loadCustomCSS(): Promise<string> {
       const chunkedCSS = await loadChunkedCSS();
       if (chunkedCSS) {
         css = chunkedCSS;
-        const syncData = await chrome.storage.sync.get("cssCompressed");
+        const syncData = await getSyncStorage<CSSStorageData>("cssCompressed");
         isCompressed = syncData.cssCompressed || false;
       } else {
-        const localData = await chrome.storage.local.get(["customCSS", "cssCompressed"]);
+        const localData = await getLocalStorage<CSSStorageData>(["customCSS", "cssCompressed"]);
         if (localData.customCSS) {
           css = localData.customCSS;
           isCompressed = localData.cssCompressed || false;
         } else {
-          const syncData = await chrome.storage.sync.get(["customCSS", "cssCompressed"]);
-          css = syncData.customCSS;
+          const syncData = await getSyncStorage<CSSStorageData>(["customCSS", "cssCompressed"]);
+          css = syncData.customCSS ?? null;
           isCompressed = syncData.cssCompressed || false;
         }
       }
