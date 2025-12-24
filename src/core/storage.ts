@@ -5,18 +5,14 @@ import { cachedDurations, cachedProperties } from "@modules/ui/animationEngine";
 /**
  * Typed wrapper for chrome.storage.local.get that casts results to expected type.
  */
-export async function getLocalStorage<T>(
-  keys: string | string[] | null
-): Promise<T> {
+export async function getLocalStorage<T>(keys: string | string[] | null): Promise<T> {
   return (await chrome.storage.local.get(keys as string[])) as unknown as T;
 }
 
 /**
  * Typed wrapper for chrome.storage.sync.get that casts results to expected type.
  */
-export async function getSyncStorage<T>(
-  keys: string | string[] | null
-): Promise<T> {
+export async function getSyncStorage<T>(keys: string | string[] | null): Promise<T> {
   return (await chrome.storage.sync.get(keys as string[])) as unknown as T;
 }
 
@@ -51,9 +47,10 @@ async function decompress(data: string): Promise<string> {
 }
 
 async function loadChunkedCSS(): Promise<string | null> {
-  const metadata = await getLocalStorage<{ customCSS_chunked?: boolean; customCSS_chunkCount?: number }>(
-    ["customCSS_chunked", "customCSS_chunkCount"]
-  );
+  const metadata = await getLocalStorage<{ customCSS_chunked?: boolean; customCSS_chunkCount?: number }>([
+    "customCSS_chunked",
+    "customCSS_chunkCount",
+  ]);
 
   if (!metadata.customCSS_chunked || !metadata.customCSS_chunkCount) {
     return null;

@@ -4,15 +4,11 @@ import { syncIndicator } from "../ui/dom";
 import { editorStateManager } from "../core/state";
 import { setThemeName } from "./themes";
 
-async function getLocalStorage<T>(
-  keys: string | string[] | null
-): Promise<T> {
+async function getLocalStorage<T>(keys: string | string[] | null): Promise<T> {
   return (await chrome.storage.local.get(keys as string[])) as unknown as T;
 }
 
-async function getSyncStorage<T>(
-  keys: string | string[] | null
-): Promise<T> {
+async function getSyncStorage<T>(keys: string | string[] | null): Promise<T> {
   return (await chrome.storage.sync.get(keys as string[])) as unknown as T;
 }
 
