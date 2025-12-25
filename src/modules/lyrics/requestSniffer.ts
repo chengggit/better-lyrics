@@ -1,4 +1,5 @@
 import { log } from "@utils";
+import type {NextResponse} from "@modules/lyrics/requestSnifferTypes/Next";
 
 interface Segment {
   primaryVideoStartTimeMilliseconds: number;
@@ -17,6 +18,10 @@ export interface LyricsInfo {
   sourceText: string | null;
 }
 
+interface VideoMetadata {
+
+  counterPartInfo: CounterpartInfo
+}
 interface CounterpartInfo {
   counterpartVideoId: string | null;
   segmentMap: SegmentMap | null;
@@ -24,7 +29,7 @@ interface CounterpartInfo {
 
 const browseIdToVideoIdMap = new Map<string, string>();
 const videoIdToLyricsMap = new Map<string, LyricsInfo>();
-const counterpartVideoIdMap = new Map<string, CounterpartInfo>();
+const videoMetaDataMap = new Map<string, CounterpartInfo>();
 const videoIdToAlbumMap = new Map<string, string | null>();
 
 let firstRequestMissedVideoId: string | null = null;
@@ -50,8 +55,8 @@ export async function getLyrics(videoId: string, maxRetries = 250): Promise<Lyri
           clearInterval(checkInterval);
           resolve(videoIdToLyricsMap.get(videoId)!);
         }
-        if (counterpartVideoIdMap.get(videoId)) {
-          let counterpart = counterpartVideoIdMap.get(videoId)!.counterpartVideoId;
+        if (videoMetaDataMap.get(videoId)) {
+          let counterpart = videoMetaDataMap.get(videoId)!.counterpartVideoId;
           if (counterpart && videoIdToLyricsMap.has(counterpart)!) {
             clearInterval(checkInterval);
             resolve(videoIdToLyricsMap.get(counterpart)!);
@@ -75,14 +80,14 @@ export async function getLyrics(videoId: string, maxRetries = 250): Promise<Lyri
  * @return
  */
 export async function getMatchingSong(videoId: string, maxCheckCount = 250): Promise<CounterpartInfo | null> {
-  if (counterpartVideoIdMap.has(videoId)) {
-    return counterpartVideoIdMap.get(videoId)!;
+  if (videoMetaDataMap.has(videoId)) {
+    return videoMetaDataMap.get(videoId)!;
   } else {
     let checkCount = 0;
     return await new Promise(resolve => {
       const checkInterval = setInterval(() => {
-        if (counterpartVideoIdMap.has(videoId)) {
-          let counterpart = counterpartVideoIdMap.get(videoId);
+        if (videoMetaDataMap.has(videoId)) {
+          let counterpart = videoMetaDataMap.get(videoId);
           clearInterval(checkInterval);
           resolve(counterpart!);
         }
@@ -121,41 +126,58 @@ export function setupRequestSniffer(): void {
     if (!(event instanceof CustomEvent)) return;
     let { /** @type string */ url, requestJson, responseJson } = event.detail;
     if (url.includes("https://music.youtube.com/youtubei/v1/next")) {
+      let nextResponse = responseJson as NextResponse;
       let playlistPanelRendererContents =
-        responseJson.contents?.singleColumnMusicWatchNextResultsRenderer?.tabbedRenderer?.watchNextTabbedResultsRenderer
-          ?.tabs?.[0]?.tabRenderer?.content?.musicQueueRenderer?.content?.playlistPanelRenderer?.contents;
+          nextResponse.contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer
+          .tabs?.[0].tabRenderer.content?.musicQueueRenderer.content?.playlistPanelRenderer.contents;
+      if (!playlistPanelRendererContents) {
+        playlistPanelRendererContents = nextResponse.continuationContents?.playlistPanelContinuation.contents
+      }
+
       if (!playlistPanelRendererContents) {
         playlistPanelRendererContents =
-          responseJson.onResponseReceivedEndpoints?.[0]?.queueUpdateCommand?.inlineContents?.playlistPanelRenderer
-            ?.contents;
+            // lowkey not sure is this key exists; All the samples I've found don't have it, but I assume I initially
+            // put it in for some reason
+            responseJson.onResponseReceivedEndpoints?.[0]?.queueUpdateCommand?.inlineContents?.playlistPanelRenderer
+                ?.contents;
+
+        if (!playlistPanelRendererContents) {
+          Utils.log("PlaylistPanelRendererContents not found.");
+        } else {
+          Utils.log("PlaylistPanelRendererContents found in onResponseReceivedEndpoints!");
+        }
       }
 
       if (playlistPanelRendererContents) {
         for (let playlistPanelRendererContent of playlistPanelRendererContents) {
+          let counterPartRenderer = playlistPanelRendererContent
+              .playlistPanelVideoWrapperRenderer?.counterpart[0].counterpartRenderer;
           let counterpartId =
-            playlistPanelRendererContent?.playlistPanelVideoWrapperRenderer?.counterpart?.[0]?.counterpartRenderer
-              ?.playlistPanelVideoRenderer?.videoId;
+              counterPartRenderer?.playlistPanelVideoRenderer.videoId;
+          let primaryRenderer = playlistPanelRendererContent.playlistPanelVideoRenderer;
+          if (!primaryRenderer) {
+            primaryRenderer = playlistPanelRendererContent.playlistPanelVideoWrapperRenderer?.primaryRenderer.playlistPanelVideoRenderer;
+          }
           let primaryId =
-            playlistPanelRendererContent?.playlistPanelVideoWrapperRenderer?.primaryRenderer?.playlistPanelVideoRenderer
-              ?.videoId;
+            playlistPanelRendererContent.playlistPanelVideoWrapperRenderer?.primaryRenderer.playlistPanelVideoRenderer.videoId;
 
-          let segmentMap: SegmentMap =
-            playlistPanelRendererContent?.playlistPanelVideoWrapperRenderer?.counterpart?.[0]?.segmentMap;
+          let segmentMap = playlistPanelRendererContent.playlistPanelVideoWrapperRenderer?.counterpart[0].segmentMap;
 
           if (counterpartId && primaryId) {
-            /**
-             * @type {SegmentMap | null}
-             */
+            let numSegmentMap: SegmentMap | null = null; // our segment map with `Number` as the type
             let reversedSegmentMap: SegmentMap | null = null;
 
             if (segmentMap && segmentMap.segment) {
-              for (let segment of segmentMap.segment) {
-                segment.counterpartVideoStartTimeMilliseconds = Number(segment.counterpartVideoStartTimeMilliseconds);
-                segment.primaryVideoStartTimeMilliseconds = Number(segment.primaryVideoStartTimeMilliseconds);
-                segment.durationMilliseconds = Number(segment.durationMilliseconds);
+              numSegmentMap = { segment: [], reversed: false}
+              for (const segment of segmentMap.segment) {
+                numSegmentMap.segment.push({
+                  counterpartVideoStartTimeMilliseconds: Number(segment.counterpartVideoStartTimeMilliseconds),
+                  primaryVideoStartTimeMilliseconds: Number(segment.primaryVideoStartTimeMilliseconds),
+                  durationMilliseconds: Number(segment.durationMilliseconds)
+                })
               }
               reversedSegmentMap = { segment: [], reversed: true };
-              for (let segment of segmentMap.segment) {
+              for (let segment of numSegmentMap.segment) {
                 reversedSegmentMap.segment.push({
                   primaryVideoStartTimeMilliseconds: segment.counterpartVideoStartTimeMilliseconds,
                   counterpartVideoStartTimeMilliseconds: segment.primaryVideoStartTimeMilliseconds,
@@ -164,15 +186,16 @@ export function setupRequestSniffer(): void {
               }
             }
 
-            counterpartVideoIdMap.set(primaryId, { counterpartVideoId: counterpartId, segmentMap });
-            counterpartVideoIdMap.set(counterpartId, {
+            videoMetaDataMap.set(primaryId, { counterpartVideoId: counterpartId, segmentMap: numSegmentMap });
+            videoMetaDataMap.set(counterpartId, {
               counterpartVideoId: primaryId,
               segmentMap: reversedSegmentMap,
             });
+
           } else {
             let primaryId = playlistPanelRendererContent?.playlistPanelVideoRenderer?.videoId;
             if (primaryId) {
-              counterpartVideoIdMap.set(primaryId, { counterpartVideoId: null, segmentMap: null });
+              videoMetaDataMap.set(primaryId, { counterpartVideoId: null, segmentMap: null });
             }
           }
         }
@@ -193,8 +216,8 @@ export function setupRequestSniffer(): void {
           ?.runs[0]?.text;
 
       videoIdToAlbumMap.set(videoId, album);
-      if (counterpartVideoIdMap.has(videoId)) {
-        let counterpart = counterpartVideoIdMap.get(videoId)!.counterpartVideoId;
+      if (videoMetaDataMap.has(videoId)) {
+        let counterpart = videoMetaDataMap.get(videoId)!.counterpartVideoId;
         if (counterpart) {
           videoIdToAlbumMap.set(counterpart, album);
         }
