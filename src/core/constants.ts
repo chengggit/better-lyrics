@@ -1,3 +1,5 @@
+import type { LyricSourceKey } from "@modules/lyrics/providers/shared";
+
 // DOM Class Names
 export const TITLE_CLASS: string = "title ytmusic-player-bar";
 export const SUBTITLE_CLASS: string = "subtitle style-scope ytmusic-player-bar";
@@ -190,7 +192,7 @@ export const LYRICS_AD_OVERLAY_ID: string = "blyrics-ad-overlay";
 export type SyncType = "syllable" | "word" | "line" | "unsynced";
 
 export interface ProviderConfig {
-  key: string;
+  key: LyricSourceKey;
   displayName: string;
   syncType: SyncType;
   priority: number;
@@ -206,6 +208,6 @@ export const PROVIDER_CONFIGS: ProviderConfig[] = [
   { key: "musixmatch-synced", displayName: "Musixmatch", syncType: "line", priority: 6 },
   { key: "yt-lyrics", displayName: "Youtube", syncType: "unsynced", priority: 7 },
   { key: "lrclib-plain", displayName: "LRCLib", syncType: "unsynced", priority: 8 },
-];
+] as const;
 
-export const LYRIC_SOURCE_KEYS = PROVIDER_CONFIGS.map(p => p.key) as unknown as readonly string[];
+export const LYRIC_SOURCE_KEYS = PROVIDER_CONFIGS.map(p => p.key);
