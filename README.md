@@ -45,6 +45,7 @@ Better Lyrics upgrades your YouTube Music experience by providing beautiful time
 - [Usage](#usage)
 - [Options](#options)
 - [Styling](#styling)
+- [Theme Marketplace](#theme-marketplace)
 - [Extension Permissions](#extension-permissions)
 - [Manual Installation](#manual-installation)
 - [FAQ](#faq)
@@ -67,6 +68,8 @@ Better Lyrics upgrades your YouTube Music experience by providing beautiful time
 🌏 Supports multiple languages\
 🪶 Runs lightweight and fast\
 🖥️ Includes full-screen mode\
+🎨 Theme Marketplace with community themes\
+🔧 Customizable lyrics providers\
 ✨ And much more!
 
 ## Download
@@ -86,17 +89,47 @@ Better Lyrics upgrades your YouTube Music experience by providing beautiful time
 
 ## Options
 
-| **Option**                               | **Default Status** |
-| ---------------------------------------- | ------------------ |
-| Logs                                     | Enabled            |
-| Auto switch to Lyrics tab                | Disabled           |
-| Blurred album art background             | Enabled            |
-| Auto-hide cursor in full screen mode     | Enabled            |
-| Full screen mode                         | Enabled            |
-| Stylized Lyrics (Background/Wobble/Glow) | Enabled            |
-| Translations                             | Disabled           |
-| Translation Language                     | English            |
-| Romanization                             | Disabled           |
+Settings are organized into tabs in the extension popup:
+
+### General
+
+| Option                    | Default  |
+| ------------------------- | -------- |
+| Show logs                 | Enabled  |
+| Auto switch to Lyrics tab | Disabled |
+
+| Cache Details | - |
+
+### Display
+
+| Option                                       | Default |
+| -------------------------------------------- | ------- |
+| Blurred album art background                 | Enabled |
+| Full screen mode                             | Enabled |
+| Auto-hide cursor in full screen mode         | Enabled |
+| Stylized animations (Background/Wobble/Glow) | Enabled |
+
+### Language
+
+| Option               | Default  |
+| -------------------- | -------- |
+| Translations         | Disabled |
+| Translation Language | English  |
+| Romanization         | Disabled |
+
+### Sources
+
+| Option            | Default                        |
+| ----------------- | ------------------------------ |
+| Provider priority | Drag to reorder, toggle on/off |
+
+### Themes
+
+| Option         | Description                         |
+| -------------- | ----------------------------------- |
+| Theme selector | Choose from installed themes        |
+| CSS Editor     | Customize styling with live preview |
+| Marketplace    | Browse and install community themes |
 
 > [!TIP]
 >
@@ -105,6 +138,10 @@ Better Lyrics upgrades your YouTube Music experience by providing beautiful time
 ## Styling
 
 Custom styling for lyrics is available from Better Lyrics v1.7.0 onwards. This allows you to personalize the appearance of both lyrics and the entire YouTube Music interface. For detailed instructions on customizing styles, importing/exporting themes, and using pre-made themes, please consult our [Styling Guide](./STYLING.md).
+
+## Theme Marketplace
+
+Browse and install community-created themes directly from the extension. Access the Marketplace via the Themes tab in extension settings. You can search, filter by ratings or downloads, and install themes with one click. Installed themes auto-update when creators publish new versions. You can also install themes from GitHub repositories by entering a repo URL.
 
 ## Extension Permissions
 
@@ -146,6 +183,10 @@ Click the Better Lyrics icon in your extensions toolbar to access settings. Chan
 
 Try refreshing the page, especially if you recently updated the extension. Your CSS changes are saved either way. If that doesn't work, try disabling and re-enabling the extension.
 
+### How do I install custom themes?
+
+Open the extension settings, go to the Themes tab, and click "Marketplace" to browse community themes. You can also install themes directly from GitHub by clicking "Install from URL" and entering a repo URL. Alternatively, you can import/export CSS from any editor view and save it as a custom theme.
+
 ### How do I enable full-screen mode?
 
 Press F on your keyboard (with the window in focus) or hover over the player bar and click the full-screen icon (⛶). Make sure "Disable fullscreen mode" option isn't checked in extension settings.
@@ -166,16 +207,6 @@ If you find any issues with lyrics, you now have two options:
 2. Contribute your own lyrics using [LRCLIBup](https://lrclibup.boidu.dev)
 
 LRCLIBup allows you to submit correct, properly synchronized lyrics that will be available to all users who use the LRCLib provider. This is a community-driven approach to improving and adding lyrics, so please be mindful of quality.
-
-### How do I contribute lyrics?
-
-You can contribute lyrics using LRCLIBup, our LRCLib upload tool:
-
-1. Visit [https://lrclibup.boidu.dev](https://lrclibup.boidu.dev)
-2. Follow the tool's interface to upload lyrics
-3. Submit your contribution
-
-This helps improve the lyrics database for all Better Lyrics users who use the LRCLib provider.
 
 ### How do I report a bug?
 
@@ -210,6 +241,18 @@ Yes! Better Lyrics supports switching between different providers. You can reord
 1. Click the Better Lyrics icon in the extensions toolbar
 2. Go to "Sources" tab
 3. Reorder or toggle providers as per your needs
+
+Available providers (default priority order):
+
+1. Better Lyrics (syllable-level sync)
+2. Musixmatch (word-level sync)
+3. YouTube Captions (line-level sync)
+4. Better Lyrics (line-level sync)
+5. LRCLib (line-level sync)
+6. Better Lyrics Legato (line-level sync)
+7. Musixmatch (line-level sync)
+8. YouTube Lyrics (unsynced)
+9. LRCLib (unsynced)
 
 Adding custom providers isn't currently supported.
 
