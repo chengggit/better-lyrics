@@ -1,9 +1,7 @@
 import { IDENTITY_ACTIONS, IDENTITY_ADJECTIVES, IDENTITY_NOUNS } from "@constants";
 import { getLocalStorage } from "@core/storage";
 
-// ============================================
-// TYPES
-// ============================================
+// -- Types ------------------------------------
 
 export interface KeyIdentity {
   keyId: string;
@@ -49,24 +47,16 @@ export interface IdentityExport {
   exportedAt: number;
 }
 
-// ============================================
-// CONSTANTS
-// ============================================
+// -- Constants --------------------------------
 
 const STORAGE_KEY = "userIdentity";
 const REGISTERED_KEY = "identityRegistered";
 const ECDSA_PARAMS: EcKeyGenParams = { name: "ECDSA", namedCurve: "P-256" };
 const HASH_ALGORITHM = "SHA-256";
 
-// ============================================
-// PRIVATE STATE
-// ============================================
-
 let cachedIdentity: KeyIdentity | null = null;
 
-// ============================================
-// PUBLIC API
-// ============================================
+// -- Public API -------------------------------
 
 export async function getIdentity(): Promise<KeyIdentity> {
   if (cachedIdentity) return cachedIdentity;
@@ -216,9 +206,7 @@ export async function markKeyRegistered(): Promise<void> {
   await chrome.storage.local.set({ [REGISTERED_KEY]: true });
 }
 
-// ============================================
-// PRIVATE HELPERS
-// ============================================
+// -- Private Helpers --------------------------
 
 async function generateKeyIdentity(): Promise<KeyIdentity> {
   const keyPair = await crypto.subtle.generateKey(ECDSA_PARAMS, true, ["sign", "verify"]);
