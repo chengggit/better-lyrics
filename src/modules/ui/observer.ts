@@ -227,7 +227,7 @@ export function initializeLyrics(): void {
 
       AppState.queueLyricInjection = true;
       AppState.queueAlbumArtInjection = true;
-      AppState.queueAlbumArtSizeChange = false;
+      AppState.queueAlbumArtSizeChange = true;
       AppState.queueSongDetailsInjection = true;
       AppState.suppressZeroTime = Date.now() + 5000;
     }
