@@ -1,6 +1,6 @@
 import { log } from "@utils";
-import type {LongBylineText, NextResponse} from "@modules/lyrics/requestSniffer/NextResponse";
-import {parseTime} from "@modules/lyrics/providers/lrcUtils";
+import type { LongBylineText, NextResponse } from "@modules/lyrics/requestSniffer/NextResponse";
+import { parseTime } from "@modules/lyrics/providers/lrcUtils";
 
 interface Segment {
   primaryVideoStartTimeMilliseconds: number;
@@ -34,8 +34,6 @@ interface VideoMetadata {
   counterpartVideoId: string | null;
   segmentMap: SegmentMap | null;
 }
-
-
 
 const browseIdToVideoIdMap = new Map<string, string>();
 const videoIdToLyricsMap = new Map<string, LyricsInfo>();
@@ -143,18 +141,18 @@ export function setupRequestSniffer(): void {
     if (matchesPath(url, "/youtubei/v1/next")) {
       let nextResponse = responseJson as NextResponse;
       let playlistPanelRendererContents =
-          nextResponse.contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer
+        nextResponse.contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer
           .tabs?.[0].tabRenderer.content?.musicQueueRenderer.content?.playlistPanelRenderer.contents;
       if (!playlistPanelRendererContents) {
-        playlistPanelRendererContents = nextResponse.continuationContents?.playlistPanelContinuation.contents
+        playlistPanelRendererContents = nextResponse.continuationContents?.playlistPanelContinuation.contents;
       }
 
       if (!playlistPanelRendererContents) {
         playlistPanelRendererContents =
-            // lowkey not sure is this key exists; All the samples I've found don't have it, but I assume I initially
-            // put it in for some reason
-            responseJson.onResponseReceivedEndpoints?.[0]?.queueUpdateCommand?.inlineContents?.playlistPanelRenderer
-                ?.contents;
+          // lowkey not sure is this key exists; All the samples I've found don't have it, but I assume I initially
+          // put it in for some reason
+          responseJson.onResponseReceivedEndpoints?.[0]?.queueUpdateCommand?.inlineContents?.playlistPanelRenderer
+            ?.contents;
 
         if (!playlistPanelRendererContents) {
           log("PlaylistPanelRendererContents not found.");
@@ -166,8 +164,7 @@ export function setupRequestSniffer(): void {
       if (playlistPanelRendererContents) {
         // let's first map this into a sensible type
         let videoPairs = playlistPanelRendererContents.map(content => {
-          let counterPartRenderer = content
-              .playlistPanelVideoWrapperRenderer?.counterpart[0].counterpartRenderer;
+          let counterPartRenderer = content.playlistPanelVideoWrapperRenderer?.counterpart[0].counterpartRenderer;
 
           let primaryRenderer = content.playlistPanelVideoRenderer;
           if (!primaryRenderer) {
@@ -175,39 +172,39 @@ export function setupRequestSniffer(): void {
           }
 
           if (!primaryRenderer) {
-            console.warn("Failed to find a primary renderer in next response!")
+            console.warn("Failed to find a primary renderer in next response!");
             return null;
           }
 
           let primaryId = primaryRenderer?.videoId;
           let primaryTitle = primaryRenderer?.title.runs[0].text;
 
-          function extractByLineInfo(longByLineText: LongBylineText){
+          function extractByLineInfo(longByLineText: LongBylineText) {
             let byLineIsVideo = false;
-            let longByLine = longByLineText.runs.filter(r => {
-                  let trimmed = r.text.trim();
-                  let hasVideoWord = trimmed.includes("views") || trimmed.includes("likes");
-                  if (hasVideoWord) {
-                    byLineIsVideo = true;
-                  }
-                  return trimmed.length > 0 && trimmed !== "•" && !hasVideoWord;
+            let longByLine = longByLineText.runs
+              .filter(r => {
+                let trimmed = r.text.trim();
+                let hasVideoWord = trimmed.includes("views") || trimmed.includes("likes");
+                if (hasVideoWord) {
+                  byLineIsVideo = true;
                 }
-            ).map(r => r.text);
+                return trimmed.length > 0 && trimmed !== "•" && !hasVideoWord;
+              })
+              .map(r => r.text);
 
             let artist: string;
             let album = "";
             if (byLineIsVideo) {
-              artist = longByLine?.join(", ")
+              artist = longByLine?.join(", ");
             } else {
               // Last elm is year, second to last is album, rest is artists
-              album = longByLine[longByLine?.length - 2]
+              album = longByLine[longByLine?.length - 2];
               artist = longByLine?.slice(0, -2).join(", ");
             }
             return [artist, album];
           }
 
           let [primaryArtist, primaryAlbum] = extractByLineInfo(primaryRenderer?.longBylineText);
-
 
           let primaryThumbnail = primaryRenderer?.thumbnail.thumbnails[0];
           let primaryIsVideo = primaryThumbnail?.height !== primaryThumbnail?.width;
@@ -218,16 +215,17 @@ export function setupRequestSniffer(): void {
             artist: primaryArtist,
             album: primaryAlbum,
             isVideo: primaryIsVideo,
-            durationMs: parseTime(primaryRenderer.lengthText.runs[0].text)
-          }
+            durationMs: parseTime(primaryRenderer.lengthText.runs[0].text),
+          };
 
           if (counterPartRenderer) {
             let counterpartId = counterPartRenderer?.playlistPanelVideoRenderer.videoId;
             let counterpartTitle = counterPartRenderer.playlistPanelVideoRenderer.title.runs[0].text;
             let counterpartThumbnail = counterPartRenderer.playlistPanelVideoRenderer.thumbnail.thumbnails[0];
             let counterpartIsVideo = counterpartThumbnail.height !== counterpartThumbnail.width;
-            let [counterpartArtist, counterpartAlbum] = extractByLineInfo(counterPartRenderer?.playlistPanelVideoRenderer.longBylineText);
-
+            let [counterpartArtist, counterpartAlbum] = extractByLineInfo(
+              counterPartRenderer?.playlistPanelVideoRenderer.longBylineText
+            );
 
             return {
               primary,
@@ -238,14 +236,12 @@ export function setupRequestSniffer(): void {
                 album: counterpartAlbum,
                 isVideo: counterpartIsVideo,
                 durationMs: parseTime(counterPartRenderer.playlistPanelVideoRenderer.lengthText.runs[0].text),
-                segmentMap: content.playlistPanelVideoWrapperRenderer!.counterpart[0].segmentMap
-              }
-            }
+                segmentMap: content.playlistPanelVideoWrapperRenderer!.counterpart[0].segmentMap,
+              },
+            };
           } else {
-            return {primary: primary};
+            return { primary: primary };
           }
-
-
         });
         for (let [index, videoPair] of videoPairs.entries()) {
           if (!videoPair) {
@@ -264,14 +260,14 @@ export function setupRequestSniffer(): void {
             let numSegmentMap: SegmentMap | null = null; // our segment map with `Number` as the type
             let reversedSegmentMap: SegmentMap | null = null;
 
-            numSegmentMap = { segment: [], reversed: false}
+            numSegmentMap = { segment: [], reversed: false };
             if (counterpart.segmentMap.segment) {
               for (const segment of counterpart.segmentMap.segment) {
                 numSegmentMap.segment.push({
                   counterpartVideoStartTimeMilliseconds: Number(segment.counterpartVideoStartTimeMilliseconds),
                   primaryVideoStartTimeMilliseconds: Number(segment.primaryVideoStartTimeMilliseconds),
-                  durationMilliseconds: Number(segment.durationMilliseconds)
-                })
+                  durationMilliseconds: Number(segment.durationMilliseconds),
+                });
               }
               reversedSegmentMap = { segment: [], reversed: true };
               for (let segment of numSegmentMap.segment) {
@@ -292,7 +288,7 @@ export function setupRequestSniffer(): void {
               counterpartVideoId: counterpart.id,
               segmentMap: numSegmentMap,
               durationMs: videoPair.primary.durationMs,
-              id: videoPair.primary.id
+              id: videoPair.primary.id,
             });
 
             videoMetaDataMap.set(counterpart.id, {
@@ -304,7 +300,7 @@ export function setupRequestSniffer(): void {
               counterpartVideoId: videoPair.primary.id,
               segmentMap: reversedSegmentMap,
               durationMs: counterpart.durationMs,
-              id: counterpart.id
+              id: counterpart.id,
             });
 
             videoIdToAlbumMap.set(counterpart.id, counterpart.album);
@@ -318,19 +314,19 @@ export function setupRequestSniffer(): void {
               counterpartVideoId: null,
               segmentMap: null,
               durationMs: videoPair.primary.durationMs,
-              id: videoPair.primary.id
+              id: videoPair.primary.id,
             });
           }
           videoIdToAlbumMap.set(videoPair.primary.id, videoPair.primary.album);
         }
       }
 
-
-      let continuation = nextResponse.contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer
-          .watchNextTabbedResultsRenderer.tabs[0].tabRenderer.content?.musicQueueRenderer.content?.playlistPanelRenderer
-          .continuations?.[0].nextRadioContinuationData.continuation
+      let continuation =
+        nextResponse.contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer
+          .tabs[0].tabRenderer.content?.musicQueueRenderer.content?.playlistPanelRenderer.continuations?.[0]
+          .nextRadioContinuationData.continuation;
       if (continuation) {
-          // TODO track continuations
+        // TODO track continuations
       }
 
       let videoId = requestJson.videoId;
@@ -400,12 +396,11 @@ export function setupRequestSniffer(): void {
   });
 }
 
-
 function matchesPath(urlString: string, path: string) {
   try {
     let url = new URL(urlString);
     return url && url.pathname.startsWith(path) && url.origin === "https://music.youtube.com";
-  } catch (e) {
+  } catch (_e) {
     return false;
   }
 }

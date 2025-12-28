@@ -20,7 +20,7 @@ import type { CubeyLyricSourceResult } from "./providers/cubey";
 import type { LyricSourceResult, ProviderParameters } from "./providers/shared";
 import { getLyrics, newSourceMap, providerPriority } from "./providers/shared";
 import type { YTLyricSourceResult } from "./providers/yt";
-import {getSongMetadata, getSongAlbum, type SegmentMap} from "./requestSniffer/requestSniffer";
+import { getSongMetadata, getSongAlbum, type SegmentMap } from "./requestSniffer/requestSniffer";
 import * as RequestSniffer from "./requestSniffer/requestSniffer";
 import * as RequestSniffing from "./requestSniffer/requestSniffer";
 import * as Translation from "./translation";
@@ -95,7 +95,7 @@ export async function createLyrics(detail: PlayerDetails, signal: AbortSignal): 
   let isAVSwitch =
     (matchingSong &&
       matchingSong.counterpartVideoId &&
-        matchingSong.counterpartVideoId === AppState.lastLoadedVideoId) ||
+      matchingSong.counterpartVideoId === AppState.lastLoadedVideoId) ||
     AppState.lastLoadedVideoId === videoId;
 
   let segmentMap = matchingSong?.segmentMap || null;
@@ -161,7 +161,7 @@ export async function createLyrics(detail: PlayerDetails, signal: AbortSignal): 
     signal,
   };
 
-  let ytLyricsPromise = getLyrics(providerParameters, "yt-lyrics").then(lyrics => {
+  let _ytLyricsPromise = getLyrics(providerParameters, "yt-lyrics").then(lyrics => {
     if (!AppState.areLyricsLoaded && lyrics) {
       log(LOG_PREFIX, "Temporarily Using YT Music Lyrics while we wait for synced lyrics to load");
 
@@ -290,9 +290,10 @@ export async function createLyrics(detail: PlayerDetails, signal: AbortSignal): 
  * @param detail - Song and player details
  * @param isMusicVideo
  */
-export async function preFetchLyrics(detail:
-                                     Pick<PlayerDetails, "song" | "artist" | "videoId" | "duration">,
-                                     isMusicVideo: boolean): Promise<void> {
+export async function preFetchLyrics(
+  detail: Pick<PlayerDetails, "song" | "artist" | "videoId" | "duration">,
+  isMusicVideo: boolean
+): Promise<void> {
   console.log("Prefetching next song", detail, isMusicVideo);
   let song = detail.song;
   let artist = detail.artist;
