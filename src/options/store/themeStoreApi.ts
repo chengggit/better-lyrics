@@ -1,7 +1,14 @@
 import { LOG_PREFIX_STORE, THEME_STORE_API_URL } from "@constants";
 import type { AllThemeStats, ApiResult, RatingResult } from "./types";
 import { fetchWithTimeout } from "./themeStoreService";
-import { signRating, signInstall, isKeyRegistered, markKeyRegistered } from "./keyIdentity";
+import {
+  signRating,
+  signInstall,
+  isKeyRegistered,
+  markKeyRegistered,
+  getCertificate,
+  setCertificate,
+} from "./keyIdentity";
 
 const THEME_ID_MAX_LENGTH = 128;
 const THEME_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
@@ -91,7 +98,11 @@ export async function trackInstall(themeId: string): Promise<ApiResult<number | 
   }
 }
 
-export async function submitRating(themeId: string, rating: number): Promise<ApiResult<RatingResult | null>> {
+export async function submitRating(
+  themeId: string,
+  rating: number,
+  turnstileToken?: string
+): Promise<ApiResult<RatingResult | null>> {
   if (!isValidThemeId(themeId)) {
     return { success: false, data: null, error: "Invalid theme ID" };
   }
@@ -102,6 +113,7 @@ export async function submitRating(themeId: string, rating: number): Promise<Api
 
   try {
     const signed = await signRating(themeId, rating);
+    const certificate = await getCertificate();
     let needsRegistration = !(await isKeyRegistered());
 
     const body: Record<string, unknown> = {
@@ -109,7 +121,17 @@ export async function submitRating(themeId: string, rating: number): Promise<Api
       signature: signed.signature,
     };
 
-    if (needsRegistration) {
+    if (certificate) {
+      body.certificate = certificate;
+    } else if (turnstileToken) {
+      body.turnstileToken = turnstileToken;
+      body.publicKey = signed.publicKey;
+      needsRegistration = true;
+    } else {
+      return { success: false, data: null, error: "CERTIFICATE_OR_TOKEN_REQUIRED" };
+    }
+
+    if (needsRegistration && !body.publicKey) {
       body.publicKey = signed.publicKey;
     }
 
@@ -142,7 +164,14 @@ export async function submitRating(themeId: string, rating: number): Promise<Api
       await markKeyRegistered();
     }
 
-    return { success: true, data: await response.json() };
+    const data = await response.json();
+
+    if (data.certificate && typeof data.certificate === "string") {
+      await setCertificate(data.certificate);
+      console.log(LOG_PREFIX_STORE, "Certificate received and stored");
+    }
+
+    return { success: true, data };
   } catch (err) {
     const error = err instanceof Error ? err.message : "Network error";
     console.warn(LOG_PREFIX_STORE, "Failed to submit rating:", error);

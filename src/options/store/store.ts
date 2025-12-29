@@ -10,7 +10,8 @@ let gridAnimationController: AnimationController | null = null;
 
 import { showAlert, type AlertAction } from "../editor/ui/feedback";
 import { fetchAllStats, submitRating, trackInstall } from "./themeStoreApi";
-import { getDisplayName } from "./keyIdentity";
+import { getDisplayName, hasCertificate } from "./keyIdentity";
+import { getTurnstileToken, cleanupTurnstile } from "./turnstile";
 import {
   applyStoreTheme,
   clearActiveStoreTheme,
@@ -1606,7 +1607,26 @@ async function openDetailModal(theme: StoreTheme, urlThemeInfo?: UrlThemeInfo): 
         ratingStatusEl.textContent = "Submitting...";
         ratingStatusEl.className = "detail-rating-status";
 
-        const { success, data: ratingData, error } = await submitRating(theme.id, rating);
+        let turnstileToken: string | undefined;
+        try {
+          const isCertified = await hasCertificate();
+          if (!isCertified) {
+            ratingStatusEl.textContent = "Verifying...";
+            turnstileToken = await getTurnstileToken();
+          }
+        } catch (turnstileError) {
+          console.error(LOG_PREFIX_STORE, "Turnstile verification failed:", turnstileError);
+          currentRating = previousRating;
+          updateStarDisplay(previousRating, false);
+          ratingStatusEl.textContent = "Verification failed. Please try again.";
+          ratingStatusEl.className = "detail-rating-status error";
+          cleanupTurnstile();
+          return;
+        }
+
+        ratingStatusEl.textContent = "Submitting...";
+
+        const { success, data: ratingData, error } = await submitRating(theme.id, rating, turnstileToken);
         if (success && ratingData) {
           await saveUserRating(theme.id, rating);
           ratingStatusEl.textContent = `You rated ${rating} star${rating > 1 ? "s" : ""} as ${displayName}`;

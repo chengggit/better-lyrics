@@ -56,6 +56,7 @@ export const LEGATO_API_URL: string = "https://lyrics-api.boidu.dev/kugou/getLyr
 export const LRCLIB_UPLOAD_URL: string = "https://lrclibup.boidu.dev/";
 export const LRCLIB_CLIENT_HEADER: string = "BetterLyrics Extension (https://github.com/better-lyrics/better-lyrics)";
 export const THEME_STORE_API_URL: string = "https://better-lyrics-themes-api.boidu.dev";
+export const THEME_STORE_TURNSTILE_URL: string = `${THEME_STORE_API_URL}/turnstile`;
 export const THEME_REGISTRY_BASE: string = "https://raw.githubusercontent.com/better-lyrics/themes";
 export const THEME_REGISTRY_URL: string = `${THEME_REGISTRY_BASE}/master`;
 export const TRANSLATE_LYRICS_URL = function (lang: string, text: string): string {

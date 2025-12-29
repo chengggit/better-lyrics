@@ -51,12 +51,14 @@ export interface IdentityExport {
   privateKey: JsonWebKey;
   displayName: string;
   exportedAt: number;
+  certificate?: string;
 }
 
 // -- Constants --------------------------------
 
 const STORAGE_KEY = "userIdentity";
 const REGISTERED_KEY = "identityRegistered";
+const CERTIFICATE_KEY = "keyCertificate";
 const ECDSA_PARAMS: EcKeyGenParams = { name: "ECDSA", namedCurve: "P-256" };
 const HASH_ALGORITHM = "SHA-256";
 
@@ -93,6 +95,7 @@ export async function createIdentity(): Promise<KeyIdentity> {
   const identity = await generateKeyIdentity();
   await saveToStorage(identity);
   await chrome.storage.local.remove(REGISTERED_KEY);
+  await chrome.storage.local.remove(CERTIFICATE_KEY);
   cachedIdentity = identity;
   return identity;
 }
@@ -172,6 +175,7 @@ export async function signPayload<T extends Record<string, unknown>>(data: T): P
 
 export async function exportIdentity(): Promise<string> {
   const identity = await getIdentity();
+  const certificate = await getCertificate();
 
   const exportData: IdentityExport = {
     version: 1,
@@ -180,6 +184,7 @@ export async function exportIdentity(): Promise<string> {
     privateKey: identity.privateKey,
     displayName: identity.displayName,
     exportedAt: Date.now(),
+    certificate: certificate ?? undefined,
   };
 
   return JSON.stringify(exportData, null, 2);
@@ -212,6 +217,13 @@ export async function importIdentity(json: string): Promise<KeyIdentity> {
 
   await saveToStorage(identity);
   await chrome.storage.local.remove(REGISTERED_KEY);
+
+  if (parsed.certificate) {
+    await setCertificate(parsed.certificate);
+  } else {
+    await clearCertificate();
+  }
+
   cachedIdentity = identity;
 
   return identity;
@@ -234,6 +246,24 @@ export async function isKeyRegistered(): Promise<boolean> {
 
 export async function markKeyRegistered(): Promise<void> {
   await chrome.storage.local.set({ [REGISTERED_KEY]: true });
+}
+
+export async function getCertificate(): Promise<string | null> {
+  const result = await getLocalStorage<{ [CERTIFICATE_KEY]?: string }>([CERTIFICATE_KEY]);
+  return result[CERTIFICATE_KEY] ?? null;
+}
+
+export async function setCertificate(certificate: string): Promise<void> {
+  await chrome.storage.local.set({ [CERTIFICATE_KEY]: certificate });
+}
+
+export async function hasCertificate(): Promise<boolean> {
+  const cert = await getCertificate();
+  return cert !== null;
+}
+
+export async function clearCertificate(): Promise<void> {
+  await chrome.storage.local.remove(CERTIFICATE_KEY);
 }
 
 // -- Private Helpers --------------------------
@@ -293,6 +323,18 @@ async function saveToStorage(identity: KeyIdentity): Promise<void> {
   await chrome.storage.local.set({ [STORAGE_KEY]: identity });
 }
 
+function isValidPublicJwk(obj: unknown): obj is JsonWebKey {
+  if (!obj || typeof obj !== "object") return false;
+  const jwk = obj as Record<string, unknown>;
+  return jwk.kty === "EC" && jwk.crv === "P-256" && typeof jwk.x === "string" && typeof jwk.y === "string";
+}
+
+function isValidPrivateJwk(obj: unknown): obj is JsonWebKey {
+  if (!isValidPublicJwk(obj)) return false;
+  const jwk = obj as Record<string, unknown>;
+  return typeof jwk.d === "string";
+}
+
 function isValidKeyIdentity(obj: unknown): obj is KeyIdentity {
   if (!obj || typeof obj !== "object") return false;
 
@@ -303,8 +345,8 @@ function isValidKeyIdentity(obj: unknown): obj is KeyIdentity {
     candidate.keyId.length === 64 &&
     typeof candidate.displayName === "string" &&
     typeof candidate.createdAt === "number" &&
-    isValidJwk(candidate.publicKey) &&
-    isValidJwk(candidate.privateKey)
+    isValidPublicJwk(candidate.publicKey) &&
+    isValidPrivateJwk(candidate.privateKey)
   );
 }
 
@@ -319,17 +361,9 @@ function isValidIdentityExport(obj: unknown): obj is IdentityExport {
     candidate.keyId.length === 64 &&
     typeof candidate.displayName === "string" &&
     typeof candidate.exportedAt === "number" &&
-    isValidJwk(candidate.publicKey) &&
-    isValidJwk(candidate.privateKey)
+    isValidPublicJwk(candidate.publicKey) &&
+    isValidPrivateJwk(candidate.privateKey)
   );
-}
-
-function isValidJwk(obj: unknown): obj is JsonWebKey {
-  if (!obj || typeof obj !== "object") return false;
-
-  const jwk = obj as Record<string, unknown>;
-
-  return jwk.kty === "EC" && jwk.crv === "P-256" && typeof jwk.x === "string" && typeof jwk.y === "string";
 }
 
 function canonicalJson(obj: unknown): string {

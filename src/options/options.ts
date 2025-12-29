@@ -1,5 +1,6 @@
 // Function to save user options
 import Sortable from "sortablejs";
+import { LOG_PREFIX } from "@constants";
 import { initStoreUI, setupYourThemesButton } from "./store/store";
 import { getIdentity, exportIdentity, importIdentity, type KeyIdentity } from "./store/keyIdentity";
 
@@ -404,7 +405,8 @@ async function initIdentityUI(): Promise<void> {
   try {
     const identity = await getIdentity();
     displayNameEl.textContent = identity.displayName;
-  } catch {
+  } catch (error) {
+    console.error(LOG_PREFIX, "Failed to load identity:", error);
     displayNameEl.textContent = "Error loading identity";
   }
 
@@ -431,7 +433,8 @@ async function handleExportIdentity(): Promise<void> {
         });
       }
     });
-  } catch {
+  } catch (error) {
+    console.error(LOG_PREFIX, "Failed to export identity:", error);
     showAlert("Failed to export identity");
   }
 }
