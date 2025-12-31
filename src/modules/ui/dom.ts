@@ -500,7 +500,7 @@ export function clearLyrics(): void {
 /**
  * Adds album art as a background image to the layout
  * and resizes the album art resolution to match user's
- * height.
+ * screen height.
  * 
  * Sets up mutation observer to watch for art changes.
  *
@@ -509,7 +509,10 @@ export function clearLyrics(): void {
 export function addAlbumArtToLayout(videoId: string): void {
   if (!videoId) return;
 
-  if (albumArtResizeObserver)
+  if (albumArtResizeObserver) {
+    albumArtResizeObserver.disconnect();
+  }
+
   if (backgroundChangeObserver) {
     backgroundChangeObserver.disconnect();
   }
@@ -531,6 +534,7 @@ export function addAlbumArtToLayout(videoId: string): void {
     }, 1000);
   });
 
+  // the observer firing up probably a rare case (only fires when user change screenres)
   resizeObserver.observe(document.documentElement);
   albumArtResizeObserver = resizeObserver;
 
