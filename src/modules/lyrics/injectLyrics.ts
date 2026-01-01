@@ -609,10 +609,7 @@ export function calculateLyricPositions() {
       }
     }
 
-    let paddingTop = parseFloat(window.getComputedStyle(lyricsElement).paddingTop);
     const data = AppState.lyricData;
-
-
     data.lyricWidth = lyricsElement.clientWidth;
 
     data.lines.forEach(line => {
