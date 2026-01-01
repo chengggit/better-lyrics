@@ -16,15 +16,19 @@ import { calculateLyricPositions, type LineData } from "@modules/lyrics/injectLy
 import { hideAdOverlay, isAdPlaying, isLoaderActive, showAdOverlay } from "@modules/ui/dom";
 import { log } from "@utils";
 import { ctx, resetDebugRender } from "./animationEngineDebug";
-const MIRCO_SCROLL_THRESHOLD_S = 0.5 as const;
-const EARLY_SCROLL_CONSIDER = 0.63 as const;
-const QUEUE_SCROLL_THRESHOLD = 150 as const;
-const TIME_JUMP_THRESHOLD = 0.5 as const;
+import {registerThemeSetting} from "@modules/settings/themeOptions";
 
-const ENABLE_DEBUG_RENDER = true;
+const LYRIC_ENDING_THRESHOLD_S = registerThemeSetting("blyrics-lyric-ending-threshold-s", 0.5);
+const EARLY_SCROLL_CONSIDER = registerThemeSetting("blyrics-early-scroll-consider-s", 0.62);
+const QUEUE_SCROLL_THRESHOLD = registerThemeSetting("blyrics-queue-scroll-ms", 150);
+const TIME_JUMP_THRESHOLD = 0.5;
 
-export const TOP_OFFSET_RATIO = 0.37; // 0.5 means the selected lyric will be in the middle of the screen, 0 means top, 1 means bottom
-export const ADD_EXTRA_PADDING_TOP = true;
+const ENABLE_DEBUG_RENDER = registerThemeSetting("blyrics-debug-renderer", false);
+
+// 0.5 means the selected lyric will be in the middle of the screen, 0 means top, 1 means bottom
+export const SCROLL_POS_OFFSET_RATIO = registerThemeSetting("blyrics-target-scroll-pos-ratio", 0.37);
+
+export const ADD_EXTRA_PADDING_TOP = registerThemeSetting("blyrics-add-extra-top-padding", false);
 
 interface AnimEngineState {
   skipScrolls: number;
@@ -202,7 +206,7 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
       }
 
       if (
-        lyricScrollTime >= time - EARLY_SCROLL_CONSIDER &&
+          lyricScrollTime >= time - EARLY_SCROLL_CONSIDER.getNumberValue() &&
         (lyricScrollTime < nextTime || lyricScrollTime < time + lineData.duration)
       ) {
         activeElems.push(lineData);
@@ -331,7 +335,7 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
       );
 
       // Offset so lyrics appear towards the center of the screen.
-      const scrollPosOffset = tabRendererHeight * TOP_OFFSET_RATIO;
+      const scrollPosOffset = tabRendererHeight * SCROLL_POS_OFFSET_RATIO.getNumberValue();
 
       let lastActiveLyric = activeElems[activeElems.length - 1];
 
@@ -339,7 +343,7 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
         .filter((lineData, index) => {
           // Ignore lyrics close to finishing unless it last active lyric
           return (
-            lyricScrollTime < lineData.time + lineData.duration - MIRCO_SCROLL_THRESHOLD_S ||
+              lyricScrollTime < lineData.time + lineData.duration - LYRIC_ENDING_THRESHOLD_S.getNumberValue() ||
             index == activeElems.length - 1
           );
         })
@@ -365,7 +369,7 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
       // Make sure we're not trying to scroll to negative values
       scrollPos = Math.max(0, scrollPos);
 
-      if (ENABLE_DEBUG_RENDER) {
+      if (ENABLE_DEBUG_RENDER.getBooleanValue()) {
         let transform = window.getComputedStyle(lyricsElement).transform;
         const matrix = new DOMMatrix(transform);
         let yTransform = matrix.f;
@@ -412,7 +416,7 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
               let timeTillActive = elm.time - lyricScrollTime;
               let endTime = elm.time + elm.duration;
               let timeTillEnd = endTime - lyricScrollTime;
-              if (timeTillEnd < MIRCO_SCROLL_THRESHOLD_S) {
+              if (timeTillEnd < LYRIC_ENDING_THRESHOLD_S.getNumberValue()) {
                 ctx!.strokeStyle = "gray";
                 ctx!.fillStyle = "gray";
               } else if (timeTillActive > 0) {
@@ -486,13 +490,13 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
 
             animEngineState.nextScrollAllowedTime = scrollTime + Date.now() + 20;
           }
-          let extraHeight = Math.max(tabRendererHeight * (1 - TOP_OFFSET_RATIO), tabRendererHeight - lyricsHeight);
+          let extraHeight = Math.max(tabRendererHeight * (1 - SCROLL_POS_OFFSET_RATIO.getNumberValue()), tabRendererHeight - lyricsHeight);
 
           (document.getElementById(LYRICS_SPACING_ELEMENT_ID) as HTMLElement).style.height =
             `${extraHeight.toFixed(0)}px`;
           scrollTop = scrollPos;
           animEngineState.scrollPos = scrollPos;
-        } else if (animEngineState.nextScrollAllowedTime - Date.now() < QUEUE_SCROLL_THRESHOLD || timeJumped) {
+        } else if (animEngineState.nextScrollAllowedTime - Date.now() < QUEUE_SCROLL_THRESHOLD.getNumberValue() || timeJumped) {
           // just missed out on being able to scroll, queue this once we finish our current lyric
           console.log("queueing a scroll", animEngineState.nextScrollAllowedTime - Date.now());
           animEngineState.queuedScroll = true;

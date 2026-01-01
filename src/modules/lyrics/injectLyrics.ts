@@ -37,7 +37,7 @@ import {
   ADD_EXTRA_PADDING_TOP,
   animEngineState,
   lyricsElementAdded,
-  TOP_OFFSET_RATIO
+  SCROLL_POS_OFFSET_RATIO
 } from "@modules/ui/animationEngine";
 import { addFooter, addNoLyricsButton, cleanup, createLyricsWrapper, flushLoader, renderLoader } from "@modules/ui/dom";
 import { getRelativeBounds, log } from "@utils";
@@ -599,10 +599,10 @@ export function calculateLyricPositions() {
   if (AppState.lyricData && AppState.areLyricsTicking) {
     const lyricsElement = document.getElementsByClassName(LYRICS_CLASS)[0] as HTMLElement;
 
-    if (ADD_EXTRA_PADDING_TOP) {
+    if (ADD_EXTRA_PADDING_TOP.getBooleanValue()) {
       const tabRendererHeight = document.getElementById("tab-renderer")?.clientHeight;
       if (tabRendererHeight) {
-        lyricsElement.style.paddingTop = `${tabRendererHeight * TOP_OFFSET_RATIO}px`;
+        lyricsElement.style.paddingTop = `${tabRendererHeight * SCROLL_POS_OFFSET_RATIO.getNumberValue()}px`;
       } else {
         lyricsElement.style.paddingTop = "";
         log("Could not find tab renderer height, not adding extra padding top.")
