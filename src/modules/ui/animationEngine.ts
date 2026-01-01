@@ -211,7 +211,6 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
       ) {
         activeElems.push(lineData);
         if (!animEngineState.lastActiveElements.includes(lineData) && lyricScrollTime >= time) {
-          console.log("new selected lyrics", lineData);
           newLyricSelected = true;
         }
 
@@ -498,10 +497,7 @@ export function animationEngine(currentTime: number, eventCreationTime: number, 
           animEngineState.scrollPos = scrollPos;
         } else if (animEngineState.nextScrollAllowedTime - Date.now() < QUEUE_SCROLL_THRESHOLD.getNumberValue() || timeJumped) {
           // just missed out on being able to scroll, queue this once we finish our current lyric
-          console.log("queueing a scroll", animEngineState.nextScrollAllowedTime - Date.now());
           animEngineState.queuedScroll = true;
-        } else {
-          console.log("not queueing a scroll", animEngineState.nextScrollAllowedTime - Date.now());
         }
       }
     }
