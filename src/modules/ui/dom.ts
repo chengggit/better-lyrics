@@ -21,8 +21,10 @@ import {
   NOTO_SANS_UNIVERSAL_LINK,
   PLAYER_BAR_SELECTOR,
   PROVIDER_CONFIGS,
+  ROMANIZED_LYRICS_CLASS,
   SONG_IMAGE_SELECTOR,
   TAB_RENDERER_SELECTOR,
+  TRANSLATED_LYRICS_CLASS,
   type SyncType,
 } from "@constants";
 import { AppState } from "@core/appState";
@@ -58,6 +60,39 @@ const providerDisplayInfo: Record<string, { name: string; syncType: SyncType }> 
   PROVIDER_CONFIGS.map(p => [p.key, { name: p.displayName, syncType: p.syncType }])
 );
 
+interface ActionButtonOptions {
+  text: string;
+  href: string;
+  logoSrc?: string;
+  logoAlt?: string;
+}
+
+function createActionButton(options: ActionButtonOptions): HTMLElement {
+  const { text, href, logoSrc, logoAlt } = options;
+
+  const container = document.createElement("div");
+  container.className = `${FOOTER_CLASS}__container`;
+
+  if (logoSrc) {
+    const img = document.createElement("img");
+    img.src = logoSrc;
+    img.alt = logoAlt ?? "";
+    img.width = 20;
+    img.height = 20;
+    container.appendChild(img);
+  }
+
+  const link = document.createElement("a");
+  link.href = href;
+  link.target = "_blank";
+  link.rel = "noreferrer noopener";
+  link.textContent = text;
+  link.style.height = "100%";
+  container.appendChild(link);
+
+  return container;
+}
+
 let backgroundChangeObserver: MutationObserver | null = null;
 let lyricsObserver: MutationObserver | null = null;
 
@@ -84,6 +119,46 @@ export function createLyricsWrapper(): HTMLElement {
   const wrapper = document.createElement("div");
   wrapper.id = LYRICS_WRAPPER_ID;
   tabRenderer.appendChild(wrapper);
+
+  wrapper.addEventListener("copy", (e: ClipboardEvent) => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) return;
+
+    const range = selection.getRangeAt(0);
+    const fragment = range.cloneContents();
+
+    const lineElements = fragment.querySelectorAll(".blyrics--line");
+
+    if (lineElements.length === 0) {
+      const text = fragment.textContent?.replace(/\s+/g, " ").trim();
+      if (text && e.clipboardData) {
+        e.preventDefault();
+        e.clipboardData.setData("text/plain", text);
+      }
+      return;
+    }
+
+    const lines: string[] = [];
+
+    for (const line of lineElements) {
+      const words = line.querySelectorAll(".blyrics--word");
+      const mainText = Array.from(words)
+        .map(w => w.textContent?.trim())
+        .filter(Boolean)
+        .join(" ");
+
+      const romanized = line.querySelector(`.${ROMANIZED_LYRICS_CLASS}`)?.textContent?.trim();
+      const translated = line.querySelector(`.${TRANSLATED_LYRICS_CLASS}`)?.textContent?.trim();
+
+      const lineParts = [mainText, romanized, translated].filter(Boolean);
+      if (lineParts.length > 0) lines.push(lineParts.join("\n"));
+    }
+
+    if (lines.length > 0) {
+      e.preventDefault();
+      e.clipboardData?.setData("text/plain", lines.join("\n"));
+    }
+  });
 
   log(LYRICS_WRAPPER_CREATED_LOG);
   return wrapper;
@@ -189,41 +264,24 @@ export function createFooter(song: string, artist: string, album: string, durati
 
     discordLink.appendChild(discordImage);
 
-    const addLyricsContainer = document.createElement("div");
-    addLyricsContainer.className = `${FOOTER_CLASS}__container`;
-
-    const addLyricsLink = document.createElement("a");
-    const url = new URL(LRCLIB_UPLOAD_URL);
-    if (song) url.searchParams.append("title", song);
-    if (artist) url.searchParams.append("artist", artist);
-    if (album) url.searchParams.append("album", album);
-    if (duration) url.searchParams.append("duration", duration.toString());
+    const lrclibUrl = new URL(LRCLIB_UPLOAD_URL);
+    if (song) lrclibUrl.searchParams.append("title", song);
+    if (artist) lrclibUrl.searchParams.append("artist", artist);
+    if (album) lrclibUrl.searchParams.append("album", album);
+    if (duration) lrclibUrl.searchParams.append("duration", duration.toString());
     footerLink.target = "_blank";
-    addLyricsLink.href = url.toString();
-    addLyricsLink.textContent = "Add Lyrics to LRCLib";
-    addLyricsLink.target = "_blank";
-    addLyricsLink.rel = "noreferrer noopener";
-    addLyricsLink.style.height = "100%";
 
-    addLyricsContainer.appendChild(addLyricsLink);
+    const addLyricsContainer = createActionButton({
+      text: "Add Lyrics to LRCLib",
+      href: lrclibUrl.toString(),
+    });
 
-    const geniusContainer = document.createElement("div");
-    geniusContainer.className = `${FOOTER_CLASS}__container`;
-
-    const geniusLink = document.createElement("a");
-    geniusLink.href = getGeniusLink(song, artist);
-    geniusLink.target = "_blank";
-    geniusLink.textContent = "Search on Genius";
-    geniusLink.style.height = "100%";
-
-    const geniusImage = document.createElement("img");
-    geniusImage.src = GENIUS_LOGO_SRC;
-    geniusImage.alt = "Genius";
-    geniusImage.width = 20;
-    geniusImage.height = 20;
-
-    geniusContainer.appendChild(geniusImage);
-    geniusContainer.appendChild(geniusLink);
+    const geniusContainer = createActionButton({
+      text: "Search on Genius",
+      href: getGeniusLink(song, artist),
+      logoSrc: GENIUS_LOGO_SRC,
+      logoAlt: "Genius",
+    });
 
     footer.appendChild(footerContainer);
     footer.appendChild(geniusContainer);
@@ -516,26 +574,22 @@ export function addNoLyricsButton(song: string, artist: string, album: string, d
   const buttonContainer = document.createElement("div");
   buttonContainer.className = "blyrics-no-lyrics-button-container";
 
-  const addLyricsButton = document.createElement("button");
-  addLyricsButton.className = "blyrics-no-lyrics-button";
-  addLyricsButton.textContent = "Add Lyrics to LRCLib";
+  const lrclibUrl = new URL(LRCLIB_UPLOAD_URL);
+  if (song) lrclibUrl.searchParams.append("title", song);
+  if (artist) lrclibUrl.searchParams.append("artist", artist);
+  if (album) lrclibUrl.searchParams.append("album", album);
+  if (duration) lrclibUrl.searchParams.append("duration", duration.toString());
 
-  const url = new URL(LRCLIB_UPLOAD_URL);
-  if (song) url.searchParams.append("title", song);
-  if (artist) url.searchParams.append("artist", artist);
-  if (album) url.searchParams.append("album", album);
-  if (duration) url.searchParams.append("duration", duration.toString());
-
-  addLyricsButton.addEventListener("click", () => {
-    window.open(url.toString(), "_blank");
+  const addLyricsButton = createActionButton({
+    text: "Add Lyrics to LRCLib",
+    href: lrclibUrl.toString(),
   });
 
-  const geniusSearch = document.createElement("button");
-  geniusSearch.className = "blyrics-no-lyrics-button";
-  geniusSearch.textContent = "Search on Genius";
-
-  geniusSearch.addEventListener("click", () => {
-    window.open(getGeniusLink(song, artist), "_blank");
+  const geniusSearch = createActionButton({
+    text: "Search on Genius",
+    href: getGeniusLink(song, artist),
+    logoSrc: GENIUS_LOGO_SRC,
+    logoAlt: "Genius",
   });
 
   buttonContainer.appendChild(addLyricsButton);
