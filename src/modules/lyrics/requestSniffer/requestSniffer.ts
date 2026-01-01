@@ -173,7 +173,6 @@ export function setupRequestSniffer(): void {
             }
 
             if (!primaryRenderer) {
-              console.warn("Failed to find a primary renderer in next response!");
               return null;
             }
 
@@ -195,7 +194,6 @@ export function setupRequestSniffer(): void {
 
               let artist: string;
               let album = "";
-              console.log(longByLine, byLineIsVideo);
               if (byLineIsVideo) {
                 artist = longByLine?.join(", ");
               } else {
@@ -255,9 +253,6 @@ export function setupRequestSniffer(): void {
           let nextPair = videoPairs.length > index + 1 ? videoPairs[index + 1] : undefined;
           let nextPrimaryVideo = nextPair?.primary.id;
           let nextCounterPartVideo = nextPair?.counterpart?.id || nextPrimaryVideo;
-
-          console.log("Setting next primary video: ", nextPrimaryVideo, videoPair.primary.id);
-          console.log("Setting next counterpart video: ", nextCounterPartVideo, videoPair.counterpart?.id);
 
           let counterpart = videoPair.counterpart;
           if (counterpart) {

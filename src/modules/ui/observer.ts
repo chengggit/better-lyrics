@@ -1,7 +1,7 @@
 import {
   AUTO_SWITCH_ENABLED_LOG,
   FULLSCREEN_BUTTON_SELECTOR,
-  GENERAL_ERROR_LOG,
+  GENERAL_ERROR_LOG, LOG_PREFIX,
   LYRICS_TAB_CLICKED_LOG,
   LYRICS_WRAPPER_ID,
   PAUSING_LYRICS_SCROLL_LOG,
@@ -236,7 +236,7 @@ export function initializeLyrics(): void {
 
     if (AppState.areLyricsTicking && AppState.areLyricsLoaded && !AppState.hasPreloadedNextSong) {
       AppState.hasPreloadedNextSong = true;
-      console.log("Trying to preload next song");
+      log(LOG_PREFIX, "Trying to preload next song");
       getSongMetadata(AppState.lastVideoId).then(async data => {
         if (data && data.nextVideoId) {
           let next = await getSongMetadata(data.nextVideoId);
