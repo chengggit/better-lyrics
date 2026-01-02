@@ -80,7 +80,7 @@ export function setThemeSettings(map: Map<string, string>) {
         needsLyricReload = true;
       }
     }
-  });
+  }
 
   if (needsLyricReload) {
     reloadLyrics();
