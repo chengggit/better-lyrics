@@ -16,7 +16,8 @@ import {
   enableLyricsTab,
   initializeLyrics,
   lyricReloader,
-  setupAltHoverHandler, setUpAvButtonListener,
+  setupAltHoverHandler,
+  setUpAvButtonListener,
   setupHomepageFullscreenHandler,
   setupWakeLockForFullscreen,
 } from "@modules/ui/observer";

@@ -3,7 +3,7 @@ import { decompressString, isCompressed } from "@core/compression";
 import { compileRicsToStyles, getLocalStorage, getSyncStorage, loadChunkedStyles } from "@core/storage";
 import { log } from "@utils";
 import { cachedDurations, cachedProperties } from "./animationEngine";
-import {setThemeSettings} from "@modules/settings/themeOptions";
+import { setThemeSettings } from "@modules/settings/themeOptions";
 
 function parseBlyricsConfig(cssContent: string): Map<string, string> {
   const configMap = new Map<string, string>();
@@ -30,7 +30,7 @@ function parseBlyricsConfig(cssContent: string): Map<string, string> {
 export function applyCustomStyles(css: string): void {
   let config = parseBlyricsConfig(css);
   setThemeSettings(config);
-  
+
   let styleTag = document.getElementById("blyrics-custom-style");
   if (styleTag) {
     styleTag.textContent = css;

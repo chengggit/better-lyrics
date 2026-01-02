@@ -479,22 +479,20 @@ export function setUpAvButtonListener(): void {
   }
 
   let handleAVSwitch = (isVideo: boolean) => {
-    let playerPage = document.querySelector("#player-page")
+    let playerPage = document.querySelector("#player-page");
 
     if (playerPage) {
       if (isVideo) {
         playerPage.setAttribute("blyrics-video-mode", "");
       } else {
         playerPage.removeAttribute("blyrics-video-mode");
-
       }
     }
-  }
+  };
   const observerCallback = (mutationsList: MutationRecord[]) => {
     for (const mutation of mutationsList) {
-      if (mutation.type === 'attributes' && mutation.attributeName === 'is-video-playback-mode-selected') {
-
-        const isVideo = avToggle.getAttribute('is-video-playback-mode-selected') === 'true';
+      if (mutation.type === "attributes" && mutation.attributeName === "is-video-playback-mode-selected") {
+        const isVideo = avToggle.getAttribute("is-video-playback-mode-selected") === "true";
         handleAVSwitch(isVideo);
       }
     }
@@ -504,8 +502,8 @@ export function setUpAvButtonListener(): void {
 
   observer.observe(avToggle, {
     attributes: true,
-    attributeFilter: ['is-video-playback-mode-selected'] // Only listen to this specific attribute
+    attributeFilter: ["is-video-playback-mode-selected"], // Only listen to this specific attribute
   });
-  handleAVSwitch(avToggle.getAttribute('is-video-playback-mode-selected') === 'true');
-  log(LOG_PREFIX, "Set up a/v toggle observer")
+  handleAVSwitch(avToggle.getAttribute("is-video-playback-mode-selected") === "true");
+  log(LOG_PREFIX, "Set up a/v toggle observer");
 }
