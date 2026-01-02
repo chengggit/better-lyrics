@@ -31,8 +31,6 @@ function parseBlyricsConfig(cssContent: string): Map<string, string> {
 export function applyCustomStyles(css: string): void {
   let config = parseBlyricsConfig(css);
   setThemeSettings(config);
-
-  AppState.queueAlbumArtSizeChange = true;
   
   let styleTag = document.getElementById("blyrics-custom-style");
   if (styleTag) {
