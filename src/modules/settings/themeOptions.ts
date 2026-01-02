@@ -73,7 +73,7 @@ export function setThemeSettings(map: Map<string, string>) {
   });
 
   // second pass reset undefined values to their default values
-  keyToSettingMap.entries().forEach(([key, setting]) => {
+  for (const [key, setting] of keyToSettingMap.entries()) {
     if (!map.has(key) && setting.value !== setting.defaultValue) {
       setting.value = setting.defaultValue;
       if (setting.requiresLyricReload) {
