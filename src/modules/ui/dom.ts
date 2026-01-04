@@ -29,7 +29,13 @@ import {
   type SyncType,
 } from "@constants";
 import { AppState } from "@core/appState";
-import { animEngineState, getResumeScrollElement, reflow, resetAnimEngineState, toMs } from "@modules/ui/animationEngine";
+import {
+  animEngineState,
+  getResumeScrollElement,
+  reflow,
+  resetAnimEngineState,
+  toMs,
+} from "@modules/ui/animationEngine";
 import { log } from "@utils";
 import { scrollEventHandler } from "./observer";
 
