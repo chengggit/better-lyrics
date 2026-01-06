@@ -61,6 +61,20 @@ function findNearestAgent(lyrics: Lyric[], fromIndex: number): string | undefine
   return undefined;
 }
 
+function isNearestLyricRtl(lyrics: Lyric[], fromIndex: number): boolean {
+  for (let i = fromIndex - 1; i >= 0; i--) {
+    if (!lyrics[i].isInstrumental && lyrics[i].words?.trim()) {
+      return testRtl(lyrics[i].words);
+    }
+  }
+  for (let i = fromIndex + 1; i < lyrics.length; i++) {
+    if (!lyrics[i].isInstrumental && lyrics[i].words?.trim()) {
+      return testRtl(lyrics[i].words);
+    }
+  }
+  return false;
+}
+
 const resizeObserver = new ResizeObserver(entries => {
   for (const entry of entries) {
     if (entry.target.id === LYRICS_WRAPPER_ID) {
@@ -294,6 +308,10 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
       const agent = findNearestAgent(lyrics, lineIndex);
       if (agent) {
         instrumentalElement.dataset.agent = agent;
+      }
+
+      if (isNearestLyricRtl(lyrics, lineIndex)) {
+        instrumentalElement.classList.add(RTL_CLASS);
       }
 
       if (!allZero) {
