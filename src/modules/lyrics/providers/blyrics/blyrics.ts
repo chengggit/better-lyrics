@@ -206,9 +206,7 @@ export async function fillTtml(responseString: string, providerParameters: Provi
     for (const element of metadataArray) {
       for (const value of Object.values(element)) {
         if (Array.isArray(value)) {
-          const nested = value.find(
-            (e): e is MetadataElement => typeof e === "object" && e !== null && key in e
-          );
+          const nested = value.find((e): e is MetadataElement => typeof e === "object" && e !== null && key in e);
           if (nested?.[key]) return nested[key] as T;
         }
       }
