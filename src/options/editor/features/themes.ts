@@ -389,7 +389,7 @@ export async function updateCreateEditButton(): Promise<void> {
   const themeName = editorStateManager.getCurrentThemeName();
   const isDefaultTheme = themeName === "Default";
 
-  const { customCSS } = await chrome.storage.sync.get("customCSS") as { customCSS?: string };
+  const { customCSS } = (await chrome.storage.sync.get("customCSS")) as { customCSS?: string };
   const hasContent = customCSS && customCSS.trim().length > 0;
 
   const showEdit = !isDefaultTheme && hasContent;
