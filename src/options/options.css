@@ -373,7 +373,7 @@ select option {
     color: rgba(255, 255, 255, 0.7);
 }
 
-#styling-guide-btn {
+.rics-footer #styling-guide-btn {
     display: flex;
     align-items: center;
     gap: 0.25rem;

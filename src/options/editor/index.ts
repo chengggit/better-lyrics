@@ -135,9 +135,6 @@ export function initializeFileOperations() {
     saveCSSToFile(css, defaultFilename);
   });
 
-  document.getElementById("styling-guide-btn")?.addEventListener("click", () => {
-    window.open("https://github.com/better-lyrics/better-lyrics/blob/master/STYLING.md", "_blank");
-  });
 }
 
 export function initializeStorageListeners() {
