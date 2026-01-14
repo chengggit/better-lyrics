@@ -134,7 +134,6 @@ export function initializeFileOperations() {
     const defaultFilename = generateDefaultFilename();
     saveCSSToFile(css, defaultFilename);
   });
-
 }
 
 export function initializeStorageListeners() {
