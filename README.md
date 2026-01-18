@@ -290,7 +290,15 @@ Join our Discord community to discuss Better Lyrics and get support from develop
 
 ## Contributing
 
-Contributions are welcome! If you have any ideas, suggestions, or bug reports, please open an issue or submit a pull request.
+Contributions are welcome! If you have any ideas, suggestions, or bug reports, please open an issue or submit a pull request. See our [Contributing Guide](CONTRIBUTING.md) for details on code and translation contributions.
+
+<a href="https://crowdin.com/project/better-lyrics?utm_source=badge&utm_medium=referral&utm_campaign=badge-add-on">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://badges.crowdin.net/badge/light/crowdin-on-dark.png 1x, https://badges.crowdin.net/badge/light/crowdin-on-dark@2x.png 2x" />
+    <source media="(prefers-color-scheme: light)" srcset="https://badges.crowdin.net/badge/dark/crowdin-on-light.png 1x, https://badges.crowdin.net/badge/dark/crowdin-on-light@2x.png 2x" />
+    <img alt="Crowdin" src="https://badges.crowdin.net/badge/dark/crowdin-on-light.png" width="140" height="40" />
+  </picture>
+</a>
 
 ## License
 

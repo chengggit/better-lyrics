@@ -88,7 +88,7 @@ Better Lyrics uses [Crowdin](https://crowdin.com/project/better-lyrics) for tran
 - Preserve placeholders like `$1`, `$2` in strings
 - Check context in the `description` field for each string
 
-### Key Naming Convention
+### I18n Key Naming Convention
 
 Keys follow `<area>_<component>_<element>` pattern:
 - `options_tab_general` - Options page, tab, general
