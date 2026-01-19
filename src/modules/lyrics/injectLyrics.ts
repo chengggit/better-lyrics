@@ -40,7 +40,7 @@ import {
   SCROLL_POS_OFFSET_RATIO,
 } from "@modules/ui/animationEngine";
 import { addFooter, addNoLyricsButton, cleanup, createLyricsWrapper, flushLoader, renderLoader } from "@modules/ui/dom";
-import { getRelativeBounds, log } from "@utils";
+import { getRelativeBounds, languageMatchesAny, log } from "@utils";
 import { resizeCanvas } from "@modules/ui/animationEngineDebug";
 import { registerThemeSetting } from "@modules/settings/themeOptions";
 
@@ -465,7 +465,7 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
 
     // Language should always exist if item.timedRomanization exists
     const shouldRomanize =
-      (data.language && romanizationLanguages.includes(data.language)) || containsNonLatin(item.words);
+      (data.language && languageMatchesAny(data.language, romanizationLanguages)) || containsNonLatin(item.words);
     const canInjectRomanizationsEarly = (shouldRomanize && item.romanization) || romanizedCacheResult !== null;
     if (item.romanization) {
       romanizedCacheResult = item.romanization;
@@ -483,9 +483,9 @@ export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible 
       langPromise.then(source_language => {
         onRomanizationEnabled(async () => {
           let isNonLatin = containsNonLatin(item.words);
-          if (romanizationLanguages.includes(source_language) || isNonLatin) {
+          if (languageMatchesAny(source_language, romanizationLanguages) || isNonLatin) {
             let usableLang = source_language;
-            if (isNonLatin && !romanizationLanguages.includes(source_language)) {
+            if (isNonLatin && !languageMatchesAny(source_language, romanizationLanguages)) {
               usableLang = "auto";
             }
 
