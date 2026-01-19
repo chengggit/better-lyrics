@@ -411,8 +411,8 @@ Instrumental breaks are always visible and styled like regular lyrics lines. The
 
 | File                            | Purpose                              |
 | ------------------------------- | ------------------------------------ |
-| `blyrics.css`                   | Core lyrics styling and animations   |
-| `ytmusic.css`                   | YouTube Music layout modifications   |
+| `blyrics/*.css`                 | Core lyrics styling and animations   |
+| `ytmusic/*.css`                 | YouTube Music layout modifications   |
 | `themesong.css`                 | ThemeSong extension compatibility    |
 | `disablestylizedanimations.css` | Disables animations when toggled off |
 

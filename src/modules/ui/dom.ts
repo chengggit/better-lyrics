@@ -664,25 +664,37 @@ export async function injectHeadTags(): Promise<void> {
   notoFontLink.rel = "stylesheet";
   document.head.appendChild(notoFontLink);
 
-  const cssFiles = ["css/ytmusic.css", "css/blyrics.css", "css/themesong.css"];
+  const cssFiles = [
+    "css/ytmusic/variables.css",
+    "css/ytmusic/general.css",
+    "css/ytmusic/fullscreen.css",
+    "css/ytmusic/mobile.css",
+    "css/blyrics/variables.css",
+    "css/blyrics/lyrics.css",
+    "css/blyrics/components.css",
+    "css/blyrics/instrumental.css",
+    "css/blyrics/misc.css",
+    "css/blyrics/responsive.css",
+    "css/themesong.css",
+  ];
 
-  let css = "";
   const responses = await Promise.all(
     cssFiles.map(file =>
       fetch(chrome.runtime.getURL(file), {
         cache: "no-store",
-      })
+      }).then(res => res.text())
     )
   );
 
   for (let i = 0; i < cssFiles.length; i++) {
-    css += `/* ${cssFiles[i]} */\n`;
-    css += await responses[i].text();
+    let css = `/* ${cssFiles[i]} */\n` + responses[i];
+
+    const style = document.createElement("style");
+    style.id = `blyrics-style-${cssFiles[i]}`
+    style.textContent = css;
+    document.head.appendChild(style);
   }
 
-  const style = document.createElement("style");
-  style.textContent = css;
-  document.head.appendChild(style);
 }
 
 /**
