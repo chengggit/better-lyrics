@@ -11,8 +11,10 @@ Better Lyrics upgrades your YouTube Music™ experience by providing beautiful t
  <img src="https://img.shields.io/badge/version-2.1.3-blue.svg" alt=""/>
 
  <img src="https://img.shields.io/badge/status-active-brightgreen.svg" alt=""/>
- <a aria-label="Volkswagen CI" href="https://github.com/better-lyrics/better-lyrics"><img src="https://auchenberg.github.io/volkswagen/volkswargen_ci.svg?v=1" alt=""/></a>
  <a aria-label="Better Stack Badge" href="https://better-lyrics-status.boidu.dev"><img height="20" src="https://uptime.betterstack.com/status-badges/v2/monitor/1dqoz.svg" alt="Better Stack Badge" /></a>
+ <a aria-label="Graphite" href="https://graphite.com/"><img height="20" src="https://img.shields.io/badge/Graphite-black?logo=Graphite&logoColor=white" alt="Graphite" /></a>
+</p>
+<p align="left">
 
  <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 <img src="https://img.shields.io/badge/all_contributors-14-orange.svg" alt=""/>
