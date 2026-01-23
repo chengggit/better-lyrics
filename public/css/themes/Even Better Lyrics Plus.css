@@ -1,5 +1,7 @@
 @import url('https://api.fontshare.com/v2/css?f[]=switzer@1&display=swap');
 
+/* blyrics-line-synced-animation-delay=0; */
+
 :root {
   --yt-album-size: 600px;
   --blyrics-font-size: 3rem;
@@ -41,28 +43,29 @@ ytmusic-player[is-mweb-player-page-modernization-enabled]:not([video-mode]) {
 }
 
 .blyrics-container {
-  overflow: hidden;
+  overflow-y: auto;
+  scroll-behavior: smooth;
   padding: 10px;
 }
 
-.blyrics-container:has(.blyrics--active):not(.blyrics-user-scrolling) > div:not(.blyrics--active):not(.blyrics--active ~ div) {
+.blyrics-container:has(.bylyrics--animating):not(.blyrics-user-scrolling) > div:not(.bylyrics--animating):not(.bylyrics--animating ~ div) {
   opacity: 0.33;
   filter: blur(2.5px);
 }
 
-.blyrics-container > div.blyrics--active {
+.blyrics-container > div.bylyrics--animating {
   opacity: 1;
   filter: blur(0px);
 }
 
-.blyrics-container > div.blyrics--active ~ div {
+.blyrics-container > div.bylyrics--animating ~ div {
   opacity: 0.66;
   filter: blur(0px);
 }
 
 .blyrics-container > div {
   transition: filter calc(var(--blyrics-duration) / 3) 0.4s,
-    opacity calc(var(--blyrics-duration) / 2) 0.4s, transform 0.166s var(--blyrics-anim-delay, 0s) !important;
+    opacity calc(var(--blyrics-duration) / 2) 0.166s, transform 0.166s var(--blyrics-anim-delay, 0s) !important;
   padding: 5px 0;
   transform-origin: left center;
 }
@@ -110,6 +113,7 @@ ytmusic-player-page:before {
   will-change: transform;
 }
 
+/* Player bar alignment stuff */
 ytmusic-player-bar {
   display: grid;
   grid-template-columns: 1.5fr 2fr 1fr;
