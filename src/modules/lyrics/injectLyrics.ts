@@ -104,12 +104,6 @@ export interface PartData {
   animationStartTimeMs: number;
 }
 
-export interface InstrumentalElements {
-  waveClip: SVGElement;
-  wavePath: SVGElement;
-  fill: SVGElement;
-}
-
 export type LineData = {
   parts: PartData[];
   isScrolled: boolean;
@@ -155,7 +149,7 @@ export function processLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible
 
   try {
     const lyricsElement = document.getElementsByClassName(LYRICS_CLASS)[0] as HTMLElement;
-    lyricsElement.innerHTML = "";
+    lyricsElement.replaceChildren();
   } catch (_err) {
     log(LYRICS_TAB_NOT_DISABLED_LOG);
   }
@@ -251,14 +245,14 @@ function createBreakElem(lyricElement: HTMLDivElement, order: number) {
  * @param [data.source] - Source attribution for lyrics
  * @param [data.sourceHref] - URL for source link
  */
-export function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible = false): void {
+function injectLyrics(data: LyricSourceResultWithMeta, keepLoaderVisible = false): void {
   const lyrics = data.lyrics!;
   cleanup();
   resizeObserver.disconnect();
 
   let lyricsWrapper = createLyricsWrapper();
 
-  lyricsWrapper.innerHTML = "";
+  lyricsWrapper.replaceChildren();
   const lyricsContainer = document.createElement("div");
   lyricsContainer.className = LYRICS_CLASS;
   lyricsWrapper.appendChild(lyricsContainer);

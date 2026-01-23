@@ -119,7 +119,7 @@ export function createLyricsWrapper(): HTMLElement {
   const existingWrapper = document.getElementById(LYRICS_WRAPPER_ID);
 
   if (existingWrapper) {
-    existingWrapper.innerHTML = "";
+    existingWrapper.replaceChildren();
     existingWrapper.style.top = "";
     existingWrapper.style.transition = "";
     return existingWrapper;
@@ -237,10 +237,10 @@ export function addFooter(
  * @param album - Album name
  * @param duration - Song duration in seconds
  */
-export function createFooter(song: string, artist: string, album: string, duration: number): void {
+function createFooter(song: string, artist: string, album: string, duration: number): void {
   try {
     const footer = document.getElementsByClassName(FOOTER_CLASS)[0] as HTMLElement;
-    footer.innerHTML = "";
+    footer.replaceChildren();
 
     const footerContainer = document.createElement("div");
     footerContainer.className = `${FOOTER_CLASS}__container`;
@@ -497,11 +497,11 @@ export function hideAdOverlay(): void {
 /**
  * Clears all lyrics content from the wrapper element.
  */
-export function clearLyrics(): void {
+function clearLyrics(): void {
   try {
     const lyricsWrapper = document.getElementById(LYRICS_WRAPPER_ID);
     if (lyricsWrapper) {
-      lyricsWrapper.innerHTML = "";
+      lyricsWrapper.replaceChildren();
     }
   } catch (err) {
     log(err);
@@ -606,8 +606,13 @@ export function addAlbumArtToLayout(videoId: string): void {
  *
  * @param src - Image source URL
  */
-export function injectAlbumArt(src: string): void {
-  document.getElementById("layout")?.style.setProperty("--blyrics-background-img", `url('${src}')`);
+function injectAlbumArt(src: string): void {
+  const img = new Image();
+  img.src = src;
+
+  img.onload = () => {
+    document.getElementById("layout")?.style.setProperty("--blyrics-background-img", `url('${src}')`);
+  };
 }
 
 /**
