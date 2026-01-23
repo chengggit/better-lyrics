@@ -39,7 +39,6 @@ import {
 } from "@modules/ui/animationEngine";
 import { log } from "@utils";
 import { scrollEventHandler } from "./observer";
-import { getThemeSetting, registerThemeSetting } from "@modules/settings/themeOptions";
 
 const syncTypeIcons: Record<SyncType, string> = {
   syllable: `<svg width="14" height="14" viewBox="0 0 1024 1024" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><rect x="636" y="239" width="389.981" height="233.271" rx="48" fill-opacity="0.5"/><path d="M0 335C0 289.745 0 267.118 14.0589 253.059C28.1177 239 50.7452 239 96 239H213C243.17 239 258.255 239 267.627 248.373C277 257.745 277 272.83 277 303V408C277 438.17 277 453.255 267.627 462.627C258.255 472 243.17 472 213 472H96C50.7452 472 28.1177 472 14.0589 457.941C0 443.882 0 421.255 0 376V335Z"/><path d="M337 304C337 273.83 337 258.745 346.373 249.373C355.745 240 370.83 240 401 240H460C505.255 240 527.882 240 541.941 254.059C556 268.118 556 290.745 556 336V377C556 422.255 556 444.882 541.941 458.941C527.882 473 505.255 473 460 473H401C370.83 473 355.745 473 346.373 463.627C337 454.255 337 439.17 337 409V304Z" fill-opacity="0.5"/><rect y="552.271" width="1024" height="233" rx="48" fill-opacity="0.5"/></svg>`,
@@ -512,6 +511,7 @@ export function clearLyrics(): void {
 let lastAlbumArtSrc: string | null = null;
 let lastAlbumSetSource: string | null = null;
 let loadController: AbortController | null = null;
+let resizeDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
 /**
  * Adds album art as a background image to the layout
@@ -588,8 +588,12 @@ export function addAlbumArtToLayout(videoId: string): void {
   backgroundChangeObserver.observe(albumArt, { attributes: true, attributeFilter: ["src"] });
 
   backgroundResizeObserver = new ResizeObserver(() => {
-    injectAlbumArtFn(true);
-    log(ALBUM_ART_ADDED_FROM_MUTATION_LOG, "resizeObserver");
+    if (resizeDebounceTimeout) clearTimeout(resizeDebounceTimeout);
+    resizeDebounceTimeout = setTimeout(() => {
+      resizeDebounceTimeout = null;
+      injectAlbumArtFn(true);
+      log(ALBUM_ART_SIZE_CHANGED);
+    }, 100);
   });
   backgroundResizeObserver.observe(albumArt);
 
@@ -614,6 +618,15 @@ export function removeAlbumArtFromLayout(): void {
   backgroundResizeObserver?.disconnect();
   backgroundChangeObserver = null;
   backgroundResizeObserver = null;
+
+  if (resizeDebounceTimeout) {
+    clearTimeout(resizeDebounceTimeout);
+    resizeDebounceTimeout = null;
+  }
+  loadController?.abort();
+  loadController = null;
+  lastAlbumArtSrc = null;
+  lastAlbumSetSource = null;
 
   const layout = document.getElementById("layout");
   if (layout) {
@@ -683,35 +696,14 @@ export async function injectHeadTags(): Promise<void> {
   notoFontLink.rel = "stylesheet";
   document.head.appendChild(notoFontLink);
 
-  const cssFiles = [
-    "css/ytmusic/variables.css",
-    "css/ytmusic/general.css",
-    "css/ytmusic/fullscreen.css",
-    "css/ytmusic/mobile.css",
-    "css/blyrics/variables.css",
-    "css/blyrics/lyrics.css",
-    "css/blyrics/components.css",
-    "css/blyrics/instrumental.css",
-    "css/blyrics/misc.css",
-    "css/blyrics/responsive.css",
-    "css/themesong.css",
-  ];
+  const cssFiles = ["css/ytmusic/index.css", "css/blyrics/index.css", "css/themesong.css"];
 
-  const responses = await Promise.all(
-    cssFiles.map(file =>
-      fetch(chrome.runtime.getURL(file), {
-        cache: "no-store",
-      }).then(res => res.text())
-    )
-  );
-
-  for (let i = 0; i < cssFiles.length; i++) {
-    let css = `/* ${cssFiles[i]} */\n` + responses[i];
-
-    const style = document.createElement("style");
-    style.id = `blyrics-style-${cssFiles[i]}`;
-    style.textContent = css;
-    document.head.appendChild(style);
+  for (const file of cssFiles) {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = chrome.runtime.getURL(file);
+    link.id = `blyrics-style-${file.replace(/(\/index)?\.css$/, "")}`;
+    document.head.appendChild(link);
   }
 }
 
