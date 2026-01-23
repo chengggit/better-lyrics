@@ -511,6 +511,7 @@ export function clearLyrics(): void {
 
 let lastAlbumArtSrc: string | null = null;
 let lastAlbumSetSource: string | null = null;
+let loadController: AbortController | null = null;
 
 /**
  * Adds album art as a background image to the layout
@@ -551,16 +552,23 @@ export function addAlbumArtToLayout(videoId: string): void {
     }
 
     if (newSrc !== lastAlbumArtSrc) {
+      loadController?.abort();
+      loadController = new AbortController();
+      const { signal } = loadController;
+
       lastAlbumArtSrc = newSrc;
-      let img = new Image();
+      const img = new Image();
       img.src = newSrc;
 
       img.onload = () => {
+        if (signal.aborted) return;
         lastAlbumSetSource = newSrc;
         albumArt.src = newSrc;
         injectAlbumArt(newSrc);
       };
+
       img.onerror = () => {
+        if (signal.aborted) return;
         lastAlbumArtSrc = null;
       };
     }
