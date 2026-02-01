@@ -12,7 +12,7 @@
         height 0.2s,
         opacity 0.2s,
         padding-top 0.2s,
-        display 0s allow-discrete; 
+        display 0s allow-discrete;
 }
 
 #blyrics-loader:not([no-sync-available]):before {
@@ -81,6 +81,7 @@
 
 #blyrics-loader[no-sync-available] {
 	max-height: 5rem;
+	display: flex !important;
 	transition:
 		height 0.2s linear 5s,
 		opacity 0.2s linear 5s,
@@ -363,6 +364,7 @@
 	display: none;
 	z-index: 2;
 	max-width: 40rem;
+	font-family: var(--blyrics-font-family);
 }
 
 #blyrics-song-info > p#blyrics-title {
