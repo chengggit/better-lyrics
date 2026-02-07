@@ -4,8 +4,8 @@ import { clearCache, compileRicsToStyles, getStorage } from "@core/storage";
 import { log, setUpLog } from "@core/utils";
 import { calculateLyricPositions } from "@modules/lyrics/injectLyrics";
 import { clearCache as clearTranslationCache } from "@modules/lyrics/translation";
-import { removeAlbumArtFromLayout } from "@modules/ui/dom";
 import { applyCustomStyles, getAndApplyCustomStyles } from "@modules/ui/styleInjector";
+import { reloadAlbumArt } from "@modules/ui/dom";
 
 let hasInitializedMessageListener = false;
 
@@ -126,7 +126,9 @@ export function hideCursorOnIdle(): void {
 
       function disappearCursor() {
         mouseTimer = null;
-        document.getElementById("layout")!.setAttribute("cursor-hidden", "");
+        if (cursorVisible) {
+          document.getElementById("layout")!.setAttribute("cursor-hidden", "");
+        }
         cursorVisible = false;
       }
 
@@ -192,10 +194,13 @@ export function listenForPopupMessages(): void {
       loadTranslationSettings();
       AppState.shouldInjectAlbumArt = "Unknown";
       onAlbumArtEnabled(
-        () => (AppState.shouldInjectAlbumArt = true),
+        () => {
+          AppState.shouldInjectAlbumArt = true;
+          reloadAlbumArt();
+        },
         () => {
           AppState.shouldInjectAlbumArt = false;
-          removeAlbumArtFromLayout();
+          reloadAlbumArt();
         }
       );
       reloadLyrics();
@@ -216,9 +221,20 @@ export function listenForPopupMessages(): void {
  * Loads translation and romanization settings from storage and updates AppState.
  */
 export function loadTranslationSettings(): void {
-  getStorage({ isTranslateEnabled: false, isRomanizationEnabled: false, translationLanguage: "en" }, items => {
-    AppState.isTranslateEnabled = items.isTranslateEnabled;
-    AppState.isRomanizationEnabled = items.isRomanizationEnabled;
-    AppState.translationLanguage = items.translationLanguage || "en";
-  });
+  getStorage(
+    {
+      isTranslateEnabled: false,
+      isRomanizationEnabled: false,
+      translationLanguage: "en",
+      romanizationDisabledLanguages: [],
+      translationDisabledLanguages: [],
+    },
+    items => {
+      AppState.isTranslateEnabled = items.isTranslateEnabled;
+      AppState.isRomanizationEnabled = items.isRomanizationEnabled;
+      AppState.translationLanguage = items.translationLanguage || "en";
+      AppState.romanizationDisabledLanguages = items.romanizationDisabledLanguages || [];
+      AppState.translationDisabledLanguages = items.translationDisabledLanguages || [];
+    }
+  );
 }

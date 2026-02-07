@@ -655,6 +655,16 @@
     "message": "Chưa cài đặt chủ đề nào",
     "description": "Empty installed themes message"
   },
+  "marketplace_lastUpdatedOn": {
+    "message": "Last updated on $date$",
+    "description": "Tooltip showing full date when a theme was last updated",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "January 15, 2025, 3:42 PM"
+      }
+    }
+  },
   "editor_pageTitle": {
     "message": "Better Lyrics Styles Editor",
     "description": "Standalone editor page title"
@@ -722,5 +732,79 @@
   "lyrics_notFound": {
     "message": "Không có lời bài hát được tìm thấy cho bài này",
     "description": "Message when no lyrics are available"
+  },
+  "options_language_exclusions": {
+    "message": "Danh sách ngôn ngữ bị loại trừ",
+    "description": "Label for language exclusions setting"
+  },
+  "options_manage": {
+    "message": "Quản lý",
+    "description": "Manage button label"
+  },
+  "options_language_exclusionsTitle": {
+    "message": "Danh sách ngôn ngữ bị loại trừ",
+    "description": "Modal title for language exclusions"
+  },
+  "options_romanization_tab": {
+    "message": "Phiên âm",
+    "description": "Romanization tab label"
+  },
+  "options_translation_tab": {
+    "message": "Dịch thuật",
+    "description": "Translation tab label"
+  },
+  "options_searchLanguages": {
+    "message": "Tìm ngôn ngữ...",
+    "description": "Search input placeholder"
+  },
+  "options_romanization_hint": {
+    "message": "Nhấn để bật/tắt. Các ngôn ngữ bị loại trừ sẽ không được phiên âm.",
+    "description": "Hint text for romanization exclusions"
+  },
+  "options_translation_hint": {
+    "message": "Nhấn để bật/tắt. Các ngôn ngữ bị loại trừ sẽ không được dịch.",
+    "description": "Hint text for translation exclusions"
+  },
+  "options_resetToDefault": {
+    "message": "Đặt lại $TYPE$ về ban đầu",
+    "description": "Reset to default button label",
+    "placeholders": {
+      "type": {
+        "content": "$1",
+        "example": "Romanization"
+      }
+    }
+  },
+  "options_romanization_resetTitle": {
+    "message": "Đặt lại loại trừ $TYPE$",
+    "description": "Modal title for resetting exclusions",
+    "placeholders": {
+      "type": {
+        "content": "$1",
+        "example": "Romanization"
+      }
+    }
+  },
+  "options_romanization_resetMessage": {
+    "message": "Thao tác này sẽ xóa tất cả các ngôn ngữ đã bị loại trừ. Chắc chắn chứ?",
+    "description": "Confirmation message for resetting exclusions"
+  },
+  "options_reset": {
+    "message": "Đặt lại",
+    "description": "Reset button label"
+  },
+  "options_cancel": {
+    "message": "Hủy",
+    "description": "Cancel button label"
+  },
+  "options_romanization_resetSuccess": {
+    "message": "Danh sách loại trừ $TYPE$ đã được đặt lại về mặc định",
+    "description": "Success message after resetting exclusions",
+    "placeholders": {
+      "type": {
+        "content": "$1",
+        "example": "Romanization"
+      }
+    }
   }
 }

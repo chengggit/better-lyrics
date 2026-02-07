@@ -8,11 +8,11 @@
     "description": "The description of the extension"
   },
   "options_tab_general": {
-    "message": "Загальне",
+    "message": "Головне",
     "description": "General settings tab label"
   },
   "options_tab_display": {
-    "message": "Відображення",
+    "message": "Вигляд",
     "description": "Display settings tab label"
   },
   "options_tab_language": {
@@ -28,15 +28,15 @@
     "description": "Identity settings tab label"
   },
   "options_tab_themes": {
-    "message": "Оформлення",
+    "message": "Стиль",
     "description": "Themes settings tab label"
   },
   "options_general_title": {
-    "message": "Загальні налаштування",
+    "message": "Головні налаштування",
     "description": "General settings section title"
   },
   "options_general_description": {
-    "message": "Налаштування загальної роботи Better Lyrics.",
+    "message": "Налаштування роботи Better Lyrics.",
     "description": "General settings section description"
   },
   "options_general_showLogs": {
@@ -108,19 +108,19 @@
     "description": "Translation language setting label"
   },
   "options_sources_title": {
-    "message": "Пріоритет джерела до текстів пісень",
+    "message": "Пріоритет джерел текстів пісень",
     "description": "Sources settings section title"
   },
   "options_sources_description": {
-    "message": "Перетягніть, щоб змінити пріоритет. Джерела розміщені вище використовуються першими. Зніміть прапорець, щоб вимкнути.",
+    "message": "Перетягніть для зміни пріоритету. Джерела зверху мають вищий пріоритет. Зніміть прапорець, щоб вимкнути.",
     "description": "Sources settings section description"
   },
   "options_themes_title": {
-    "message": "Налаштування теми оформлення",
+    "message": "Стиль інтерфейсу",
     "description": "Theme settings section title"
   },
   "options_themes_description": {
-    "message": "Кастомізуйте вигляд Better Lyrics.",
+    "message": "Кастомізуйте зовнішній вигляд від Better Lyrics.",
     "description": "Theme settings section description"
   },
   "options_themes_theme": {
@@ -655,6 +655,16 @@
     "message": "Немає встановлених тем",
     "description": "Empty installed themes message"
   },
+  "marketplace_lastUpdatedOn": {
+    "message": "Останнє оновлення: $date$",
+    "description": "Tooltip showing full date when a theme was last updated",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "January 15, 2025, 3:42 PM"
+      }
+    }
+  },
   "editor_pageTitle": {
     "message": "Better Lyrics Редактор CSS",
     "description": "Standalone editor page title"
@@ -722,5 +732,79 @@
   "lyrics_notFound": {
     "message": "Не знайдено текстів для цієї пісні",
     "description": "Message when no lyrics are available"
+  },
+  "options_language_exclusions": {
+    "message": "Винятки мов",
+    "description": "Label for language exclusions setting"
+  },
+  "options_manage": {
+    "message": "Налаштувати",
+    "description": "Manage button label"
+  },
+  "options_language_exclusionsTitle": {
+    "message": "Винятки мов",
+    "description": "Modal title for language exclusions"
+  },
+  "options_romanization_tab": {
+    "message": "Транслітерація",
+    "description": "Romanization tab label"
+  },
+  "options_translation_tab": {
+    "message": "Переклад",
+    "description": "Translation tab label"
+  },
+  "options_searchLanguages": {
+    "message": "Пошук...",
+    "description": "Search input placeholder"
+  },
+  "options_romanization_hint": {
+    "message": "Клацніть, щоб увімкнути або вимкнути. Транслітерація не буде застосовуватись.",
+    "description": "Hint text for romanization exclusions"
+  },
+  "options_translation_hint": {
+    "message": "Клацніть, щоб увімкнути або вимкнути. Тексти цими мовами не будуть перекладені.",
+    "description": "Hint text for translation exclusions"
+  },
+  "options_resetToDefault": {
+    "message": "Скинути до налаштувань за замовчуванням",
+    "description": "Reset to default button label",
+    "placeholders": {
+      "type": {
+        "content": "$1",
+        "example": "Romanization"
+      }
+    }
+  },
+  "options_romanization_resetTitle": {
+    "message": "Скинути винятки",
+    "description": "Modal title for resetting exclusions",
+    "placeholders": {
+      "type": {
+        "content": "$1",
+        "example": "Romanization"
+      }
+    }
+  },
+  "options_romanization_resetMessage": {
+    "message": "Усі винятки буде видалено. Продовжити?",
+    "description": "Confirmation message for resetting exclusions"
+  },
+  "options_reset": {
+    "message": "Скинути",
+    "description": "Reset button label"
+  },
+  "options_cancel": {
+    "message": "Скасувати",
+    "description": "Cancel button label"
+  },
+  "options_romanization_resetSuccess": {
+    "message": "Скинуто до стандартних значень",
+    "description": "Success message after resetting exclusions",
+    "placeholders": {
+      "type": {
+        "content": "$1",
+        "example": "Romanization"
+      }
+    }
   }
 }

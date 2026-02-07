@@ -18,7 +18,6 @@ export const ROMANIZED_LYRICS_CLASS = "blyrics--romanized" as const;
 export const FOOTER_CLASS = "blyrics-footer" as const;
 
 // DOM Selectors
-export const SONG_IMAGE_SELECTOR = "#song-image>#thumbnail>#img" as const;
 export const TAB_RENDERER_SELECTOR = "#tab-renderer" as const;
 export const NO_LYRICS_TEXT_SELECTOR =
   "#tab-renderer > ytmusic-message-renderer > yt-formatted-string.text.style-scope.ytmusic-message-renderer" as const;
@@ -29,6 +28,7 @@ export const LYRICS_LOADER_ID = "blyrics-loader" as const;
 export const LYRICS_WRAPPER_ID = "blyrics-wrapper" as const;
 export const LYRICS_SPACING_ELEMENT_ID = "blyrics-spacing-element" as const;
 export const LYRICS_DISABLED_ATTR = "blyrics-dfs" as const;
+export const HIDDEN_CLASS = "blyrics-hidden" as const;
 
 // Assets and Resources
 export const DISCORD_LOGO_SRC =
@@ -61,35 +61,37 @@ export const CUBEY_LYRICS_API_URL_TURNSTILE = "https://lyrics.api.dacubeking.com
 
 export const CUBEY_LYRICS_API_URL = "https://lyrics.api.dacubeking.com/" as const;
 
-// Supported Languages
-export const romanizationLanguages = [
-  "ja", // Japanese - Romaji
-  "ru", // Russian - Romanization
-  "ko", // Korean - Romanization
-  "zh-CN", // Simplified Chinese - Pinyin
-  "zh-TW", // Traditional Chinese - Pinyin
-  // "hi" , // Hindi
-  "zh", // Chinese
-  "bn", // Bengali - Romanization
-  "th", // Thai - Romanization
-  "el", // Greek - Romanization
-  "he", // Hebrew - Romanization
-  "ar", // Arabic - Romanization
-  "ta", // Tamil - Romanization
-  "te", // Telugu - Romanization
-  "ml", // Malayalam - Romanization
-  "kn", // Kannada - Romanization
-  "gu", // Gujarati - Romanization
-  "pa", // Punjabi - Romanization
-  "mr", // Marathi - Romanization
-  "ur", // Urdu - Romanization
-  "si", // Sinhala - Romanization
-  "my", // Burmese - Romanization
-  "ka", // Georgian - Romanization
-  "km", // Khmer - Romanization
-  "lo", // Lao - Romanization
-  "fa", // Persian - Romanization
-];
+// Supported Romanization Languages
+// Display names are fallback only - use getLanguageDisplayName() from @core/i18n for UI
+// to get auto-localized names via Intl.DisplayNames API
+export const ROMANIZATION_LANGUAGES: Record<string, string> = {
+  ja: "Japanese",
+  ko: "Korean",
+  zh: "Chinese",
+  "zh-CN": "Chinese (Simplified)",
+  "zh-TW": "Chinese (Traditional)",
+  ru: "Russian",
+  hi: "Hindi",
+  ar: "Arabic",
+  th: "Thai",
+  el: "Greek",
+  he: "Hebrew",
+  bn: "Bengali",
+  ta: "Tamil",
+  te: "Telugu",
+  ml: "Malayalam",
+  kn: "Kannada",
+  gu: "Gujarati",
+  pa: "Punjabi",
+  mr: "Marathi",
+  ur: "Urdu",
+  si: "Sinhala",
+  my: "Burmese",
+  ka: "Georgian",
+  km: "Khmer",
+  lo: "Lao",
+  fa: "Persian",
+};
 
 // Log Prefixes
 export const LOG_PREFIX = "[BetterLyrics]" as const;
@@ -122,11 +124,6 @@ export const FOOTER_NOT_VISIBLE_LOG =
 export const LYRICS_TAB_NOT_DISABLED_LOG =
   "[BetterLyrics] (Safe to ignore) Lyrics tab is not disabled, unable to enable it" as const;
 export const SONG_SWITCHED_LOG = "[BetterLyrics] Song has been switched" as const;
-export const ALBUM_ART_ADDED_LOG = "[BetterLyrics] Album art added to the layout" as const;
-export const ALBUM_ART_ADDED_FROM_MUTATION_LOG =
-  "[BetterLyrics] Album art added to the layout from mutation event" as const;
-export const ALBUM_ART_SIZE_CHANGED = "[BetterLyrics] Album art size changed to" as const;
-export const ALBUM_ART_REMOVED_LOG = "[BetterLyrics] Album art removed from the layout" as const;
 export const LOADER_TRANSITION_ENDED = "[BetterLyrics] Loader Transition Ended" as const;
 export const LOADER_ANIMATION_END_FAILED = "[BetterLyrics] Loader Animation Didn't End" as const;
 export const PAUSING_LYRICS_SCROLL_LOG = "[BetterLyrics] Pausing Lyrics Autoscroll Due to User Scroll" as const;
