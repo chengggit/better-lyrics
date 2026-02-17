@@ -303,7 +303,7 @@ function createFooter(song: string, artist: string, album: string, duration: num
 
 let loaderStateTimeout: number | undefined;
 
-type LoaderState = "full-loader" | "small-loader" | "showing-message" | "exiting" | "hidden";
+type LoaderState = "full-loader" | "small-loader" | "showing-message" | "exiting" | "exiting-message" | "hidden";
 
 function setLoaderState(state: LoaderState, text?: string): void {
   const loader = document.getElementById(LYRICS_LOADER_ID);
@@ -367,26 +367,26 @@ export function flushLoader(showNoSyncAvailable = false): void {
     clearTimeout(loaderStateTimeout);
     clearTimeout(AppState.loaderAnimationEndTimeout);
 
-    const performExit = () => {
-      setLoaderState("exiting");
+    const performExit = (fromMessage = false) => {
+      setLoaderState(fromMessage ? "exiting-message" : "exiting");
 
       AppState.loaderAnimationEndTimeout = window.setTimeout(() => {
         setLoaderState("hidden");
         loaderWrapper.hidden = true;
         log(LOADER_TRANSITION_ENDED);
-      }, 600); // Match CSS transition duration
+      }, 1200); // Make longer than css duration
     };
 
     if (showNoSyncAvailable) {
       setLoaderState("showing-message", t("lyrics_noSyncedLyrics"));
 
       loaderStateTimeout = window.setTimeout(() => {
-        performExit();
+        performExit(true);
       }, 3000);
     } else {
       // Lyrics were found, flush immediately to allow lyrics to animate in
       // simultaneously with the loader animating out
-      performExit();
+      performExit(loaderWrapper.getAttribute("state") === "showing-message");
     }
   } catch (err) {
     log(err);
